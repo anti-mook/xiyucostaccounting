@@ -75,6 +75,21 @@
     tr.frozen td { opacity: 0.5; }
     @media (min-width: 768px) { th, td { padding: 16px 16px; } }
     
+    /* 手机端表格转卡片 */
+    @media (max-width: 576px) {
+      .table-scroll table, .table-scroll thead, .table-scroll tbody, .table-scroll th, .table-scroll td, .table-scroll tr { display: block; min-width: 0; }
+      .table-scroll thead { display: none; }
+      .table-scroll tr { background: #fff; border-radius: 12px; margin-bottom: 10px; padding: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+      .table-scroll td { padding: 4px 0; border-bottom: none; text-align: left; position: relative; padding-left: 0; }
+      .table-scroll td::before { content: attr(data-label); font-weight: 600; color: var(--primary); font-size: 12px; margin-right: 8px; min-width: 60px; display: inline-block; }
+    }
+    
+    /* 手机端按钮不换行 */
+    @media (max-width: 576px) {
+      .btn-group { flex-wrap: nowrap; gap: 4px; }
+      .btn-sm { padding: 5px 8px; font-size: 11px; border-radius: 6px; white-space: nowrap; }
+    }
+    
     /* 页面 */
     .page { display: none; }
     .page.active { display: block; }
@@ -548,12 +563,12 @@
       const activeTbody = document.querySelector('#ingredients-active-table tbody');
       const activeEmpty = document.getElementById('ingredients-active-empty');
       if (active.length === 0) { activeTbody.innerHTML = ''; activeEmpty.style.display = 'block'; }
-      else { activeEmpty.style.display = 'none'; activeTbody.innerHTML = active.map(ing => `<tr><td>${ing.brand}</td><td>${ing.name}</td><td>${ing.category}</td><td>${ing.weight}${ing.unit}</td><td><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
+      else { activeEmpty.style.display = 'none'; activeTbody.innerHTML = active.map(ing => `<tr><td data-label="品牌">${ing.brand}</td><td data-label="产品名">${ing.name}</td><td data-label="分类">${ing.category}</td><td data-label="规格">${ing.weight}${ing.unit}</td><td data-label="价格"><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
       
       const frozenTbody = document.querySelector('#ingredients-frozen-table tbody');
       const frozenEmpty = document.getElementById('ingredients-frozen-empty');
       if (frozen.length === 0) { frozenTbody.innerHTML = ''; frozenEmpty.style.display = 'block'; }
-      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozen.map(ing => `<tr class="frozen"><td>${ing.brand}</td><td>${ing.name}</td><td>${ing.category}</td><td>${ing.weight}${ing.unit}</td><td><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
+      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozen.map(ing => `<tr class="frozen"><td data-label="品牌">${ing.brand}</td><td data-label="产品名">${ing.name}</td><td data-label="分类">${ing.category}</td><td data-label="规格">${ing.weight}${ing.unit}</td><td data-label="价格"><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td data-label="操作"><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
       
       updateCategoryList();
     }
@@ -635,19 +650,19 @@
       if (activeToppings.length === 0) { topTbody.innerHTML = ''; topEmpty.style.display = 'block'; }
       else { topEmpty.style.display = 'none'; topTbody.innerHTML = activeToppings.map(top => {
         const ingredientsHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
-        return `<tr><td style="font-weight:600;">${top.name}</td><td><div class="topping-detail">${ingredientsHtml}</div></td><td style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+        return `<tr><td data-label="名称" style="font-weight:600;">${top.name}</td><td data-label="组成"><div class="topping-detail">${ingredientsHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
       }).join(''); }
       
       const baseTbody = document.querySelector('#bases-active-table tbody'); const baseEmpty = document.getElementById('bases-active-empty');
       if (activeBases.length === 0) { baseTbody.innerHTML = ''; baseEmpty.style.display = 'block'; }
       else { baseEmpty.style.display = 'none'; baseTbody.innerHTML = activeBases.map(top => {
         const ingredientsHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
-        return `<tr><td style="font-weight:600;">${top.name}</td><td><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td><div class="topping-detail">${ingredientsHtml}</div></td><td style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+        return `<tr><td data-label="名称" style="font-weight:600;">${top.name}</td><td data-label="条数"><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td data-label="组成"><div class="topping-detail">${ingredientsHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
       }).join(''); }
       
       const frozenTbody = document.querySelector('#toppings-frozen-table tbody'); const frozenEmpty = document.getElementById('toppings-frozen-empty');
       if (frozenAll.length === 0) { frozenTbody.innerHTML = ''; frozenEmpty.style.display = 'block'; }
-      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozenAll.map(top => `<tr class="frozen"><td>${top.name}</td><td><span class="type-tag ${top.type === '小料' ? 'topping' : 'base'}">${top.type}</span></td><td style="font-size:12px;color:#999;">${top.ingredients.map(i => `${i.ingredientName}（${i.brand}）`).join('、')}</td><td>¥${calculateUnitCost(top).toFixed(2)}</td><td><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`).join(''); }
+      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozenAll.map(top => `<tr class="frozen"><td data-label="名称">${top.name}</td><td data-label="类型"><span class="type-tag ${top.type === '小料' ? 'topping' : 'base'}">${top.type}</span></td><td data-label="组成" style="font-size:12px;color:#999;">${top.ingredients.map(i => `${i.ingredientName}（${i.brand}）`).join('、')}</td><td data-label="成本">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`).join(''); }
     }
     
     // 记录
@@ -731,7 +746,7 @@
       const end = start + pageSize;
       const pageData = sorted.slice(start, end);
       
-      document.querySelector('#records-table tbody').innerHTML = pageData.map(r => `<tr><td>${r.date}</td><td>¥${(r.wx || 0).toFixed(2)}</td><td>¥${(r.ali || 0).toFixed(2)}</td><td>¥${(r.cash || 0).toFixed(2)}</td><td>¥${(r.other || 0).toFixed(2)}</td><td>¥${(r.totalRevenue || 0).toFixed(2)}</td><td>¥${(r.totalCost || 0).toFixed(2)}</td><td class="${(r.profit || 0) >= 0 ? '' : 'delete-confirm'}">¥${(r.profit || 0).toFixed(2)}</td><td>${r.totalRevenue > 0 ? ((r.profit / r.totalRevenue) * 100).toFixed(1) + '%' : '-'}</td><td><div class="btn-group"><button class="btn btn-default btn-sm" onclick="editRecord('${r.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button></div></td></tr>`).join('');
+      document.querySelector('#records-table tbody').innerHTML = pageData.map(r => `<tr><td data-label="日期">${r.date}</td><td data-label="微信">¥${(r.wx || 0).toFixed(2)}</td><td data-label="支付宝">¥${(r.ali || 0).toFixed(2)}</td><td data-label="现金">¥${(r.cash || 0).toFixed(2)}</td><td data-label="其它">¥${(r.other || 0).toFixed(2)}</td><td data-label="总收入">¥${(r.totalRevenue || 0).toFixed(2)}</td><td data-label="总成本">¥${(r.totalCost || 0).toFixed(2)}</td><td data-label="利润" class="${(r.profit || 0) >= 0 ? '' : 'delete-confirm'}">¥${(r.profit || 0).toFixed(2)}</td><td data-label="利润率">${r.totalRevenue > 0 ? ((r.profit / r.totalRevenue) * 100).toFixed(1) + '%' : '-'}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-default btn-sm" onclick="editRecord('${r.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button></div></td></tr>`).join('');
     }
     
     async function editRecord(id) {
