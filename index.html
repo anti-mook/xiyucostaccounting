@@ -266,10 +266,13 @@
         
         <!-- 小料启用区 -->
         <div class="card">
-          <div class="section-title" style="margin-bottom: 16px;">✅ 小料 - 启用区</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="section-title" style="margin:0;">✅ 小料 - 启用区</div>
+            <select class="filter-select" id="topping-category-filter" onchange="renderToppings()"><option value="">全部分类</option></select>
+          </div>
           <div class="table-scroll">
             <table id="toppings-active-table">
-              <thead><tr><th>名称</th><th>原料组成及用量</th><th>成本</th><th>操作</th></tr></thead>
+              <thead><tr><th>名称</th><th>原料组成</th><th>用量</th><th>成本</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -278,10 +281,13 @@
         
         <!-- 冰底启用区 -->
         <div class="card">
-          <div class="section-title" style="margin-bottom: 16px;">✅ 冰底 - 启用区</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="section-title" style="margin:0;">✅ 冰底 - 启用区</div>
+            <select class="filter-select" id="base-category-filter" onchange="renderToppings()"><option value="">全部分类</option></select>
+          </div>
           <div class="table-scroll">
             <table id="bases-active-table">
-              <thead><tr><th>名称</th><th>条数</th><th>原料组成及用量</th><th>成本</th><th>操作</th></tr></thead>
+              <thead><tr><th>名称</th><th>条数</th><th>原料组成</th><th>用量</th><th>成本</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -644,20 +650,46 @@
     }
     
     function renderToppings() {
-      const activeToppings = data.toppings.filter(t => !t.frozen && t.type === '小料'); const activeBases = data.toppings.filter(t => !t.frozen && t.type === '冰底'); const frozenAll = data.toppings.filter(t => t.frozen);
+      // 更新小料/冰底分类筛选下拉
+      const ingCategories = [...new Set(data.ingredients.filter(i => !i.frozen).map(i => i.category))];
+      const topFilter = document.getElementById('topping-category-filter');
+      const baseFilter = document.getElementById('base-category-filter');
+      const topFilterVal = topFilter.value;
+      const baseFilterVal = baseFilter.value;
+      topFilter.innerHTML = '<option value="">全部分类</option>' + ingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+      baseFilter.innerHTML = '<option value="">全部分类</option>' + ingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+      topFilter.value = topFilterVal;
+      baseFilter.value = baseFilterVal;
+      
+      // 根据分类筛选：小料/冰底的原料中包含该分类的原料才显示
+      const filterByCategory = (toppings, filterVal) => {
+        if (!filterVal) return toppings;
+        return toppings.filter(t => t.ingredients.some(ing => {
+          const sourceIng = data.ingredients.find(i => i.id === ing.ingredientId);
+          return sourceIng && sourceIng.category === filterVal;
+        }));
+      };
+      
+      let activeToppings = data.toppings.filter(t => !t.frozen && t.type === '小料');
+      let activeBases = data.toppings.filter(t => !t.frozen && t.type === '冰底');
+      activeToppings = filterByCategory(activeToppings, topFilterVal);
+      activeBases = filterByCategory(activeBases, baseFilterVal);
+      const frozenAll = data.toppings.filter(t => t.frozen);
       
       const topTbody = document.querySelector('#toppings-active-table tbody'); const topEmpty = document.getElementById('toppings-active-empty');
       if (activeToppings.length === 0) { topTbody.innerHTML = ''; topEmpty.style.display = 'block'; }
       else { topEmpty.style.display = 'none'; topTbody.innerHTML = activeToppings.map(top => {
-        const ingredientsHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
-        return `<tr><td data-label="名称" style="font-weight:600;">${top.name}</td><td data-label="组成"><div class="topping-detail">${ingredientsHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+        const namesHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span></div>`).join('');
+        const qtyHtml = top.ingredients.map(ing => `<div class="topping-ing"><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
+        return `<tr><td data-label="名称" style="font-weight:600;">${top.name}</td><td data-label="原料组成"><div class="topping-detail">${namesHtml}</div></td><td data-label="用量"><div class="topping-detail">${qtyHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
       }).join(''); }
       
       const baseTbody = document.querySelector('#bases-active-table tbody'); const baseEmpty = document.getElementById('bases-active-empty');
       if (activeBases.length === 0) { baseTbody.innerHTML = ''; baseEmpty.style.display = 'block'; }
       else { baseEmpty.style.display = 'none'; baseTbody.innerHTML = activeBases.map(top => {
-        const ingredientsHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
-        return `<tr><td data-label="名称" style="font-weight:600;">${top.name}</td><td data-label="条数"><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td data-label="组成"><div class="topping-detail">${ingredientsHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+        const namesHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span></div>`).join('');
+        const qtyHtml = top.ingredients.map(ing => `<div class="topping-ing"><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
+        return `<tr><td data-label="名称" style="font-weight:600;">${top.name}</td><td data-label="条数"><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td data-label="原料组成"><div class="topping-detail">${namesHtml}</div></td><td data-label="用量"><div class="topping-detail">${qtyHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
       }).join(''); }
       
       const frozenTbody = document.querySelector('#toppings-frozen-table tbody'); const frozenEmpty = document.getElementById('toppings-frozen-empty');
