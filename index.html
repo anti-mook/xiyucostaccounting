@@ -490,6 +490,7 @@
     let data = { ingredients: [], toppings: [], records: [] };
     let deleteCallback = null;
     let confirmCallback = null;
+    let confirmCancelCallback = null;
     let currentPage = 1;
     const pageSize = 50;
     let filteredRecords = [];
@@ -588,14 +589,15 @@
     function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); deleteCallback = null; }
     document.getElementById('delete-confirm-btn').addEventListener('click', () => { if (deleteCallback) deleteCallback(); closeDeleteModal(); });
     
-    function showConfirmModal(title, message, callback) { 
+    function showConfirmModal(title, message, callback, cancelCallback) { 
       document.getElementById('confirm-title').textContent = title; 
       document.getElementById('confirm-message').textContent = message; 
-      confirmCallback = callback; 
+      confirmCallback = callback;
+      confirmCancelCallback = cancelCallback || null;
       document.getElementById('confirm-modal').classList.add('active'); 
     }
-    function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('active'); confirmCallback = null; }
-    document.getElementById('confirm-btn').addEventListener('click', () => { if (confirmCallback) confirmCallback(); closeConfirmModal(); });
+    function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('active'); if (confirmCancelCallback) { confirmCancelCallback(); confirmCancelCallback = null; } confirmCallback = null; }
+    document.getElementById('confirm-btn').addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmCancelCallback = null; closeConfirmModal(); });
     
     // 原料管理
     async function addIngredient() {
@@ -629,6 +631,7 @@
     }
     function closeEditIngredientModal() { document.getElementById('edit-ingredient-modal').classList.remove('active'); }
     function confirmEditIngredient() {
+      document.getElementById('edit-ingredient-modal').classList.remove('active');
       showConfirmModal('✅ 确认保存', '确定保存对原料的修改吗？', async () => {
         const id = document.getElementById('edit-ing-id').value;
         const ing = data.ingredients.find(i => i.id === id); if (!ing) return;
@@ -641,7 +644,8 @@
         if (!newBrand || !newName || !newWeight) { alert('品牌、产品名、重量/容量不能为空'); return; }
         ing.brand = newBrand; ing.name = newName; ing.category = newCategory; ing.weight = newWeight; ing.unit = newUnit; ing.price = newPrice || ing.price;
         await saveData(); renderIngredients(); updateCategoryList();
-        closeEditIngredientModal();
+      }, () => {
+        document.getElementById('edit-ingredient-modal').classList.add('active');
       });
     }
     
@@ -738,6 +742,7 @@
     }
     
     function confirmEditTopping() {
+      document.getElementById('edit-topping-modal').classList.remove('active');
       showConfirmModal('✅ 确认保存', '确定保存对小料/冰底的修改吗？', async () => {
         const id = document.getElementById('edit-topping-id').value; const name = document.getElementById('edit-top-name').value.trim(); const type = document.getElementById('edit-top-type').value; const portions = parseInt(document.getElementById('edit-top-portions').value) || 1;
         const selectedIds = getSelectedIngredientIds('edit-topping-ingredients-list');
@@ -745,7 +750,8 @@
         selectedIds.forEach(ingId => { const ing = data.ingredients.find(i => i.id === ingId); if (ing) { const oldTop = data.toppings.find(t => t.id === id); const oldIng = oldTop ? oldTop.ingredients.find(i => i.ingredientId === ing.id) : null; ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: oldIng ? oldIng.quantity : 0, unit: ing.unit, weight: ing.weight, price: ing.price }); } });
         if (ingredients.length === 0) { alert('请至少选择一种原料'); return; }
         const top = data.toppings.find(t => t.id === id); if (top) { top.name = name; top.type = type; top.portions = type === '冰底' ? portions : null; top.ingredients = ingredients; await saveData(); renderToppings(); }
-        closeEditToppingModal();
+      }, () => {
+        document.getElementById('edit-topping-modal').classList.add('active');
       });
     }
     
