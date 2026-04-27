@@ -209,6 +209,35 @@
     .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
     .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
     .pagination-info { font-size: 13px; color: var(--text-light); }
+    
+    /* ========== 大板块卡片样式 ========== */
+    .section-card { padding: 0; overflow: hidden; }
+    .section-card .card-header { margin-bottom: 0; border-radius: 16px 16px 0 0; background: linear-gradient(135deg, #f8fafd, #eef2f7); padding: 16px 20px; }
+    .section-card .card-title { font-size: 16px; }
+    
+    /* 子区块 */
+    .section-block { border-bottom: 1px solid #f0f0f0; }
+    .section-block:last-child { border-bottom: none; }
+    .section-block.frozen-section { background: #fafafa; }
+    .section-subtitle { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; font-size: 14px; font-weight: 600; color: #555; cursor: default; user-select: none; }
+    .section-subtitle .toggle-icon { font-size: 10px; color: #bbb; transition: transform 0.2s; }
+    .section-subtitle.collapsed .toggle-icon { transform: rotate(-90deg); }
+    .section-header-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
+    .section-header-row .section-subtitle { padding: 0; }
+    .section-body { padding: 0 20px 16px; }
+    .section-subtitle.collapsed + .section-body { display: none; }
+    .section-header-row.collapsed + .section-body { display: none; }
+    
+    /* 新增原料表单在大板块内不需要card样式 */
+    .section-body .form-row { margin-bottom: 12px; }
+    .section-body .btn-success { margin-bottom: 4px; }
+    
+    /* 选择原料区块样式 */
+    .topping-form-block { border: 2px dashed var(--primary-light); background: #f8fafd; }
+    .topping-form-block .card-header { background: transparent; padding: 12px 20px 0; }
+    .topping-form-block .card-title { font-size: 14px; }
+    .topping-form-block .section-body { padding: 0 20px 16px; }
+    .topping-form-block .btn-group { padding: 0 20px 16px; }
   </style>
 </head>
 <body>
@@ -233,125 +262,161 @@
       
       <!-- 原料列表 -->
       <div id="ingredients-tab" class="tab-content">
-        <!-- 新增原料 -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">新增原料</div></div>
-          <div class="form-row">
-            <div class="form-group"><label>品牌</label><input type="text" id="ing-brand" placeholder="蒙牛"></div>
-            <div class="form-group"><label>产品名</label><input type="text" id="ing-name" placeholder="纯牛奶"></div>
-            <div class="form-group"><label>分类</label><input type="text" id="ing-category" placeholder="乳制品" list="category-list"><datalist id="category-list"></datalist></div>
-            <div class="form-group"><label>重量/容量</label><input type="number" id="ing-weight" placeholder="1" step="0.01"></div>
-            <div class="form-group"><label>单位</label><select id="ing-unit"><option value="ml">ml</option><option value="g">g</option></select></div>
-            <div class="form-group"><label>价格(元)</label><input type="number" id="ing-price" placeholder="8.90" step="0.01"></div>
+        <div class="card section-card">
+          <div class="card-header"><div class="card-title">📦 原料管理</div></div>
+          
+          <!-- 新增原料 -->
+          <div class="section-block">
+            <div class="section-subtitle" onclick="toggleSection(this)">
+              <span>➕ 新增原料</span><span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-body">
+              <div class="form-row">
+                <div class="form-group"><label>品牌</label><input type="text" id="ing-brand" placeholder="蒙牛"></div>
+                <div class="form-group"><label>产品名</label><input type="text" id="ing-name" placeholder="纯牛奶"></div>
+                <div class="form-group"><label>分类</label><input type="text" id="ing-category" placeholder="乳制品" list="category-list"><datalist id="category-list"></datalist></div>
+                <div class="form-group"><label>重量/容量</label><input type="number" id="ing-weight" placeholder="1" step="0.01"></div>
+                <div class="form-group"><label>单位</label><select id="ing-unit"><option value="ml">ml</option><option value="g">g</option></select></div>
+                <div class="form-group"><label>价格(元)</label><input type="number" id="ing-price" placeholder="8.90" step="0.01"></div>
+              </div>
+              <button class="btn btn-success" onclick="addIngredient()">+ 添加原料</button>
+            </div>
           </div>
-          <button class="btn btn-success" onclick="addIngredient()">+ 添加原料</button>
-        </div>
-        
-        <!-- 原料列表 - 启用区 -->
-        <div class="card">
-          <div class="section-header">
-            <div class="section-title">✅ 启用区</div>
-            <select class="filter-select" id="category-filter-active" onchange="renderIngredients()">
-              <option value="">全部分类</option>
-            </select>
+          
+          <!-- 启用区 -->
+          <div class="section-block">
+            <div class="section-header-row">
+              <div class="section-subtitle"><span>✅ 启用区</span></div>
+              <select class="filter-select" id="category-filter-active" onchange="renderIngredients()">
+                <option value="">全部分类</option>
+              </select>
+            </div>
+            <div class="section-body">
+              <div class="table-scroll">
+                <table id="ingredients-active-table">
+                  <thead><tr><th>品牌</th><th>产品</th><th>类别</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="empty" id="ingredients-active-empty" style="display:none;"><div class="empty-icon">📦</div>暂无启用的原料</div>
+            </div>
           </div>
-          <div class="table-scroll">
-            <table id="ingredients-active-table">
-              <thead><tr><th>品牌</th><th>产品</th><th>类别</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
-              <tbody></tbody>
-            </table>
+          
+          <!-- 冻结区 -->
+          <div class="section-block frozen-section">
+            <div class="section-subtitle" onclick="toggleSection(this)">
+              <span>❄️ 冻结区</span><span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-body">
+              <div class="table-scroll">
+                <table id="ingredients-frozen-table">
+                  <thead><tr><th>品牌</th><th>产品</th><th>类别</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="empty" id="ingredients-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的原料</div>
+            </div>
           </div>
-          <div class="empty" id="ingredients-active-empty" style="display:none;"><div class="empty-icon">📦</div>暂无启用的原料</div>
-        </div>
-        
-        <!-- 原料列表 - 冻结区 -->
-        <div class="card" style="opacity: 0.65;">
-          <div class="section-title" style="margin-bottom: 16px;">❄️ 冻结区</div>
-          <div class="table-scroll">
-            <table id="ingredients-frozen-table">
-              <thead><tr><th>品牌</th><th>产品</th><th>类别</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="empty" id="ingredients-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的原料</div>
         </div>
       </div>
       
       <!-- 小料列表 -->
       <div id="toppings-tab" class="tab-content" style="display: none;">
-        <!-- 新增小料/冰底 -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">新增小料/冰底</div></div>
-          <div class="form-row">
-            <div class="form-group"><label>名称</label><input type="text" id="top-name" placeholder="芋泥"></div>
-            <div class="form-group"><label>类型</label><select id="top-type" onchange="togglePortionField()"><option value="小料">小料</option><option value="冰底">冰底</option></select></div>
-            <div class="form-group" id="top-portion-field" style="display:none;"><label>制成条数</label><input type="number" id="top-portions" placeholder="10" min="1"></div>
+        <div class="card section-card">
+          <div class="card-header"><div class="card-title">🧊 小料/冰底管理</div></div>
+          
+          <!-- 新增小料/冰底 -->
+          <div class="section-block">
+            <div class="section-subtitle" onclick="toggleSection(this)">
+              <span>➕ 新增小料/冰底</span><span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-body">
+              <div class="form-row">
+                <div class="form-group"><label>名称</label><input type="text" id="top-name" placeholder="芋泥"></div>
+                <div class="form-group"><label>类型</label><select id="top-type" onchange="togglePortionField()"><option value="小料">小料</option><option value="冰底">冰底</option></select></div>
+                <div class="form-group" id="top-portion-field" style="display:none;"><label>制成条数</label><input type="number" id="top-portions" placeholder="10" min="1"></div>
+              </div>
+              <button class="btn btn-success" onclick="showToppingForm()">+ 选择原料组成</button>
+            </div>
           </div>
-          <button class="btn btn-success" onclick="showToppingForm()">+ 选择原料组成</button>
-        </div>
-        
-        <!-- 选择原料弹窗 -->
-        <div class="card" id="topping-form-card" style="display:none; border: 2px dashed var(--primary-light); background: #f8fafd;">
-          <div class="card-header"><div class="card-title">选择原料组成</div></div>
-          <div id="topping-ingredients-list"></div>
-          <div class="btn-group" style="margin-top: 16px;">
-            <button class="btn btn-success" onclick="saveTopping()">确认添加</button>
-            <button class="btn btn-default" onclick="hideToppingForm()">取消</button>
+          
+          <!-- 选择原料组成 -->
+          <div class="section-block topping-form-block" id="topping-form-block" style="display:none;">
+            <div class="card-header"><div class="card-title">选择原料组成</div></div>
+            <div class="section-body">
+              <div id="topping-ingredients-list"></div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-success" onclick="saveTopping()">确认添加</button>
+              <button class="btn btn-default" onclick="hideToppingForm()">取消</button>
+            </div>
           </div>
-        </div>
-        
-        <!-- 小料启用区 -->
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <div class="section-title" style="margin:0;">✅ 小料 - 启用区</div>
-            <select class="filter-select" id="topping-category-filter" onchange="renderToppings()"><option value="">全部分类</option></select>
+          
+          <!-- 小料启用区 -->
+          <div class="section-block">
+            <div class="section-header-row">
+              <div class="section-subtitle"><span>✅ 小料 - 启用区</span></div>
+              <select class="filter-select" id="topping-category-filter" onchange="renderToppings()"><option value="">全部分类</option></select>
+            </div>
+            <div class="section-body">
+              <div class="table-scroll">
+                <table id="toppings-active-table">
+                  <thead><tr><th>小料信息</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="empty" id="toppings-active-empty" style="display:none;"><div class="empty-icon">🧊</div>暂无启用的小料</div>
+            </div>
           </div>
-          <div class="table-scroll">
-            <table id="toppings-active-table">
-              <thead><tr><th>小料信息</th></tr></thead>
-              <tbody></tbody>
-            </table>
+          
+          <!-- 冰底启用区 -->
+          <div class="section-block">
+            <div class="section-header-row">
+              <div class="section-subtitle"><span>✅ 冰底 - 启用区</span></div>
+              <select class="filter-select" id="base-category-filter" onchange="renderToppings()"><option value="">全部分类</option></select>
+            </div>
+            <div class="section-body">
+              <div class="table-scroll">
+                <table id="bases-active-table">
+                  <thead><tr><th>冰底信息</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="empty" id="bases-active-empty" style="display:none;"><div class="empty-icon">🧊</div>暂无启用的冰底</div>
+            </div>
           </div>
-          <div class="empty" id="toppings-active-empty" style="display:none;"><div class="empty-icon">🧊</div>暂无启用的小料</div>
-        </div>
-        
-        <!-- 冰底启用区 -->
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <div class="section-title" style="margin:0;">✅ 冰底 - 启用区</div>
-            <select class="filter-select" id="base-category-filter" onchange="renderToppings()"><option value="">全部分类</option></select>
+          
+          <!-- 小料冻结区 -->
+          <div class="section-block frozen-section">
+            <div class="section-subtitle" onclick="toggleSection(this)">
+              <span>❄️ 小料 - 冻结区</span><span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-body">
+              <div class="table-scroll">
+                <table id="toppings-frozen-table">
+                  <thead><tr><th>小料信息</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="empty" id="toppings-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的小料</div>
+            </div>
           </div>
-          <div class="table-scroll">
-            <table id="bases-active-table">
-              <thead><tr><th>冰底信息</th></tr></thead>
-              <tbody></tbody>
-            </table>
+          
+          <!-- 冰底冻结区 -->
+          <div class="section-block frozen-section">
+            <div class="section-subtitle" onclick="toggleSection(this)">
+              <span>❄️ 冰底 - 冻结区</span><span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-body">
+              <div class="table-scroll">
+                <table id="bases-frozen-table">
+                  <thead><tr><th>冰底信息</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="empty" id="bases-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的冰底</div>
+            </div>
           </div>
-          <div class="empty" id="bases-active-empty" style="display:none;"><div class="empty-icon">🧊</div>暂无启用的冰底</div>
-        </div>
-        
-        <!-- 小料 - 冻结区 -->
-        <div class="card" style="opacity: 0.65;">
-          <div class="section-title" style="margin-bottom: 16px;">❄️ 小料 - 冻结区</div>
-          <div class="table-scroll">
-            <table id="toppings-frozen-table">
-              <thead><tr><th>小料信息</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="empty" id="toppings-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的小料</div>
-        </div>
-        
-        <!-- 冰底 - 冻结区 -->
-        <div class="card" style="opacity: 0.65;">
-          <div class="section-title" style="margin-bottom: 16px;">❄️ 冰底 - 冻结区</div>
-          <div class="table-scroll">
-            <table id="bases-frozen-table">
-              <thead><tr><th>冰底信息</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="empty" id="bases-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的冰底</div>
         </div>
       </div>
       
@@ -599,6 +664,16 @@
     function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('active'); if (confirmCancelCallback) { confirmCancelCallback(); confirmCancelCallback = null; } confirmCallback = null; }
     document.getElementById('confirm-btn').addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmCancelCallback = null; closeConfirmModal(); });
     
+    // 区块折叠功能
+    function toggleSection(el) {
+      el.classList.toggle('collapsed');
+      // 找到下一个兄弟元素并切换显示
+      const nextEl = el.nextElementSibling;
+      if (nextEl && nextEl.classList.contains('section-body')) {
+        nextEl.style.display = el.classList.contains('collapsed') ? 'none' : 'block';
+      }
+    }
+    
     // 原料管理
     async function addIngredient() {
       const brand = document.getElementById('ing-brand').value.trim();
@@ -678,8 +753,8 @@
     
     // 小料管理
     function togglePortionField() { document.getElementById('top-portion-field').style.display = document.getElementById('top-type').value === '冰底' ? 'block' : 'none'; }
-    function showToppingForm() { const name = document.getElementById('top-name').value.trim(); if (!name) { alert('请填写名称'); return; } document.getElementById('topping-form-card').style.display = 'block'; renderIngredientPicker('topping-ingredients-list'); }
-    function hideToppingForm() { document.getElementById('topping-form-card').style.display = 'none'; }
+    function showToppingForm() { const name = document.getElementById('top-name').value.trim(); if (!name) { alert('请填写名称'); return; } document.getElementById('topping-form-block').style.display = 'block'; renderIngredientPicker('topping-ingredients-list'); }
+    function hideToppingForm() { document.getElementById('topping-form-block').style.display = 'none'; }
     
     const pickerColors = ['#1565c0','#2e7d32','#e65100','#c62828','#7b1fa2','#00695c','#f57f17','#4e342e'];
     function renderIngredientPicker(containerId, selectedIds) {
