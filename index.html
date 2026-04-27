@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>喜芋成本核算系统</title>
+  <style>
+    :root {
+      --primary: #1e3c72;
+      --primary-light: #2a5298;
+      --success: #52c41a;
+      --danger: #ff4d4f;
+      --warning: #faad14;
+      --orange: #fa8c16;
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --border: #e8f0fe;
+      --text: #333333;
+      --text-light: #8c8c8c;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    
+    /* 导航 */
+    .nav { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 0 16px; box-shadow: 0 2px 12px rgba(30, 60, 114, 0.3); display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-brand { color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 0; }
+    .nav-brand::before { content: "🧊"; font-size: 22px; margin-right: 8px; }
+    .nav-divider { margin: 0 12px; opacity: 0.5; font-weight: 300; }
+    .nav a { text-decoration: none; color: rgba(255,255,255,0.75); padding: 6px 14px; border-radius: 18px; font-weight: 500; font-size: 14px; transition: all 0.2s; }
+    .nav a:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .nav a.active { background: rgba(255,255,255,0.2); color: #fff; }
+    @media (max-width: 576px) { .nav-brand { font-size: 15px; } .nav-brand::before { font-size: 18px; } .nav-divider { margin: 0 8px; } .nav a { padding: 5px 10px; font-size: 13px; } }
+    
+    /* 容器 */
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    @media (min-width: 768px) { .container { padding: 24px; } }
+    
+    /* 卡片 */
+    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    @media (min-width: 768px) { .card { padding: 28px; margin-bottom: 24px; } }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
+    .card-title { font-size: 17px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .card-title::before { content: ""; width: 4px; height: 18px; background: linear-gradient(180deg, var(--primary), var(--primary-light)); border-radius: 2px; }
+    @media (min-width: 768px) { .card-title { font-size: 19px; } }
+    
+    /* 表单 */
+    .form-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 110px; }
+    @media (min-width: 768px) { .form-group { min-width: 130px; } }
+    .form-group label { display: block; font-size: 13px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 14px; transition: all 0.2s; background: #fafafa; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1); }
+    
+    /* 按钮 */
+    .btn { padding: 10px 24px; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(30, 60, 114, 0.4); }
+    .btn-success { background: linear-gradient(135deg, #43a047, #66bb6a); color: #fff; }
+    .btn-success:hover { transform: translateY(-1px); }
+    .btn-danger { background: linear-gradient(135deg, #e53935, #ef5350); color: #fff; }
+    .btn-default { background: #f5f5f5; color: var(--text); border: 2px solid #e8e8e8; }
+    .btn-default:hover { background: #eeeeee; }
+    .btn-warning { background: linear-gradient(135deg, #ff9800, #ffb74d); color: #fff; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    
+    /* 表格 */
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { background: linear-gradient(180deg, #f8fafd, #f0f4f8); font-weight: 600; color: var(--primary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; }
+    tr:hover td { background: #f8fafd; }
+    tr.frozen td { opacity: 0.5; }
+    @media (min-width: 768px) { th, td { padding: 16px 16px; } }
+    
+    /* 页面 */
+    .page { display: none; }
+    .page.active { display: block; }
+    
+    /* 统计卡片 */
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    @media (min-width: 576px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 992px) { .stats { grid-template-columns: repeat(6, 1fr); } }
+    .stat-card { background: var(--card-bg); border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); position: relative; overflow: hidden; }
+    .stat-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+    .stat-card.green::before { background: linear-gradient(90deg, #43a047, #66bb6a); }
+    .stat-card.orange::before { background: linear-gradient(90deg, #ff9800, #ffb74d); }
+    .stat-card.blue::before { background: linear-gradient(90deg, #1976d2, #42a5f5); }
+    .stat-card.gray::before { background: linear-gradient(90deg, #757575, #9e9e9e); }
+    .stat-card .label { font-size: 12px; color: var(--text-light); font-weight: 500; }
+    .stat-card .value { font-size: 22px; font-weight: 700; margin-top: 6px; color: var(--text); }
+    @media (min-width: 768px) { .stat-card .value { font-size: 26px; } }
+    .stat-card .value.green { color: var(--success); }
+    .stat-card .value.red { color: var(--danger); }
+    .stat-card .value.blue { color: var(--primary-light); }
+    
+    /* 标签页 */
+    .tabs { display: flex; gap: 0; margin-bottom: 20px; background: var(--card-bg); border-radius: 12px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .tab-btn { flex: 1; padding: 12px 16px; background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-light); border-radius: 10px; font-weight: 600; transition: all 0.2s; }
+    .tab-btn:hover { color: var(--text); background: #f5f5f5; }
+    .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; box-shadow: 0 2px 8px rgba(30, 60, 114, 0.3); }
+    
+    /* 类型标签 */
+    .type-tag { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .type-tag.topping { background: #e3f2fd; color: #1976d2; }
+    .type-tag.base { background: #fff3e0; color: #f57c00; }
+    
+    /* 可编辑输入框 - 橙色 */
+    .inline-input { 
+      width: 60px; padding: 6px 8px; border: 2px solid var(--warning); border-radius: 8px; 
+      font-size: 15px; text-align: center; font-weight: 700; color: var(--orange); 
+      background: linear-gradient(180deg, #fffbe6, #fff8e1); transition: all 0.2s;
+    }
+    .inline-input:focus { outline: none; border-color: #ef6c00; background: #fff; box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.15); transform: scale(1.05); }
+    @media (min-width: 768px) { .inline-input { width: 70px; padding: 8px 10px; } }
+    
+    .delete-confirm { color: var(--danger); font-weight: 600; }
+    
+    /* 模态框 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--card-bg); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-title { font-size: 18px; margin-bottom: 16px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+    
+    .empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    
+    /* 收入区块 */
+    .income-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (min-width: 768px) { .income-grid { grid-template-columns: repeat(3, 1fr); } }
+    .income-item { background: linear-gradient(180deg, #f8fafd, #f0f4f8); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+    .income-item label { font-size: 12px; color: var(--text-light); margin-bottom: 6px; display: block; font-weight: 500; }
+    .income-item input { width: 100%; padding: 10px 12px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 15px; font-weight: 600; background: #fff; }
+    .income-item input:focus { outline: none; border-color: var(--primary-light); }
+    
+    /* 小料详情 */
+    .topping-detail { background: #f8fafd; border-radius: 10px; padding: 12px; }
+    .topping-ing { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .topping-ing:last-child { border-bottom: none; }
+    .topping-ing-name { flex: 1; font-size: 13px; color: var(--text); min-width: 80px; }
+    @media (min-width: 768px) { .topping-ing-name { min-width: 120px; font-size: 14px; } }
+    .topping-ing-cost { font-size: 11px; color: var(--text-light); }
+    
+    /* 区块标题带筛选 */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+    .section-title { font-size: 15px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+    .filter-select { padding: 8px 16px; border: 2px solid #e8e8e8; border-radius: 20px; font-size: 13px; background: #fff; min-width: 120px; font-weight: 500; }
+    
+    /* 分页 */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+    .pagination button { padding: 8px 16px; border: 2px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .pagination button:hover { border-color: var(--primary-light); color: var(--primary); }
+    .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pagination-info { font-size: 13px; color: var(--text-light); }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">
+      喜芋成本核算系统
+      <span class="nav-divider">|</span>
+      <a href="#" data-page="home" class="active">首页</a>
+      <span class="nav-divider">|</span>
+      <a href="#" data-page="report">看板</a>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <!-- 首页 -->
+    <div id="home" class="page active">
+      <!-- 标签页 -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="ingredients">原料列表</button>
+        <button class="tab-btn" data-tab="toppings">小料列表</button>
+      </div>
+      
+      <!-- 原料列表 -->
+      <div id="ingredients-tab" class="tab-content">
+        <!-- 新增原料 -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">新增原料</div></div>
+          <div class="form-row">
+            <div class="form-group"><label>品牌</label><input type="text" id="ing-brand" placeholder="蒙牛"></div>
+            <div class="form-group"><label>产品名</label><input type="text" id="ing-name" placeholder="纯牛奶"></div>
+            <div class="form-group"><label>分类</label><input type="text" id="ing-category" placeholder="乳制品" list="category-list"><datalist id="category-list"></datalist></div>
+            <div class="form-group"><label>重量/容量</label><input type="number" id="ing-weight" placeholder="1" step="0.01"></div>
+            <div class="form-group"><label>单位</label><select id="ing-unit"><option value="ml">ml</option><option value="g">g</option></select></div>
+            <div class="form-group"><label>价格(元)</label><input type="number" id="ing-price" placeholder="8.90" step="0.01"></div>
+          </div>
+          <button class="btn btn-success" onclick="addIngredient()">+ 添加原料</button>
+        </div>
+        
+        <!-- 原料列表 - 启用区 -->
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">✅ 启用区</div>
+            <select class="filter-select" id="category-filter-active" onchange="renderIngredients()">
+              <option value="">全部分类</option>
+            </select>
+          </div>
+          <div class="table-scroll">
+            <table id="ingredients-active-table">
+              <thead><tr><th>品牌</th><th>产品名</th><th>分类</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="ingredients-active-empty" style="display:none;"><div class="empty-icon">📦</div>暂无启用的原料</div>
+        </div>
+        
+        <!-- 原料列表 - 冻结区 -->
+        <div class="card" style="opacity: 0.65;">
+          <div class="section-title" style="margin-bottom: 16px;">❄️ 冻结区</div>
+          <div class="table-scroll">
+            <table id="ingredients-frozen-table">
+              <thead><tr><th>品牌</th><th>产品名</th><th>分类</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="ingredients-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结的原料</div>
+        </div>
+      </div>
+      
+      <!-- 小料列表 -->
+      <div id="toppings-tab" class="tab-content" style="display: none;">
+        <!-- 新增小料/冰底 -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">新增小料/冰底</div></div>
+          <div class="form-row">
+            <div class="form-group"><label>名称</label><input type="text" id="top-name" placeholder="芋泥"></div>
+            <div class="form-group"><label>类型</label><select id="top-type" onchange="togglePortionField()"><option value="小料">小料</option><option value="冰底">冰底</option></select></div>
+            <div class="form-group" id="top-portion-field" style="display:none;"><label>制成条数</label><input type="number" id="top-portions" placeholder="10" min="1"></div>
+          </div>
+          <button class="btn btn-success" onclick="showToppingForm()">+ 选择原料组成</button>
+        </div>
+        
+        <!-- 选择原料弹窗 -->
+        <div class="card" id="topping-form-card" style="display:none; border: 2px dashed var(--primary-light); background: #f8fafd;">
+          <div class="card-header"><div class="card-title">选择原料组成</div></div>
+          <div id="topping-ingredients-list"></div>
+          <button class="btn btn-default btn-sm" onclick="addToppingIngredientRow()" style="margin: 12px 0;">+ 添加原料</button>
+          <div class="btn-group" style="margin-top: 16px;">
+            <button class="btn btn-success" onclick="saveTopping()">确认添加</button>
+            <button class="btn btn-default" onclick="hideToppingForm()">取消</button>
+          </div>
+        </div>
+        
+        <!-- 小料启用区 -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom: 16px;">✅ 小料 - 启用区</div>
+          <div class="table-scroll">
+            <table id="toppings-active-table">
+              <thead><tr><th>名称</th><th>原料组成及用量</th><th>成本</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="toppings-active-empty" style="display:none;"><div class="empty-icon">🧊</div>暂无启用的小料</div>
+        </div>
+        
+        <!-- 冰底启用区 -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom: 16px;">✅ 冰底 - 启用区</div>
+          <div class="table-scroll">
+            <table id="bases-active-table">
+              <thead><tr><th>名称</th><th>条数</th><th>原料组成及用量</th><th>成本</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="bases-active-empty" style="display:none;"><div class="empty-icon">🧊</div>暂无启用的冰底</div>
+        </div>
+        
+        <!-- 冻结区 -->
+        <div class="card" style="opacity: 0.65;">
+          <div class="section-title" style="margin-bottom: 16px;">❄️ 冻结区</div>
+          <div class="table-scroll">
+            <table id="toppings-frozen-table">
+              <thead><tr><th>名称</th><th>类型</th><th>原料组成</th><th>成本</th><th>操作</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="toppings-frozen-empty" style="display:none;"><div class="empty-icon">❄️</div>暂无冻结</div>
+        </div>
+      </div>
+      
+      <!-- 每日记录 - 收入模块放最下面 -->
+      <div class="card" style="margin-top: 24px; border-top: 4px solid var(--primary);">
+        <div class="card-header"><div class="card-title">💰 每日记录</div></div>
+        <div class="form-row">
+          <div class="form-group" style="max-width: 180px;"><label>日期</label><input type="date" id="record-date"></div>
+        </div>
+        
+        <div style="margin: 20px 0;">
+          <div style="font-size: 14px; color: var(--text-light); margin-bottom: 14px; font-weight: 500;">收入明细（非必填）</div>
+          <div class="income-grid">
+            <div class="income-item"><label>💚 微信-个人</label><input type="number" id="rev-wx-personal" placeholder="0" step="0.01"></div>
+            <div class="income-item"><label>💚 微信-工作机</label><input type="number" id="rev-wx-work" placeholder="0" step="0.01"></div>
+            <div class="income-item"><label>💙 支付宝-个人</label><input type="number" id="rev-ali-personal" placeholder="0" step="0.01"></div>
+            <div class="income-item"><label>💙 支付宝-工作机</label><input type="number" id="rev-ali-work" placeholder="0" step="0.01"></div>
+            <div class="income-item"><label>💵 现金</label><input type="number" id="rev-cash" placeholder="0" step="0.01"></div>
+            <div class="income-item"><label>📦 其它</label><input type="number" id="rev-other" placeholder="0" step="0.01"></div>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="saveRecord()" style="width: 100%; justify-content: center; padding: 14px; font-size: 15px;">📝 记录</button>
+      </div>
+    </div>
+    
+    <!-- 看板 -->
+    <div id="report" class="page">
+      <!-- 日期筛选 -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">日期筛选</div></div>
+        <div class="form-row">
+          <div class="form-group" style="max-width: 160px;"><label>开始</label><input type="date" id="filter-start-date"></div>
+          <div class="form-group" style="max-width: 160px;"><label>结束</label><input type="date" id="filter-end-date"></div>
+          <div class="form-group"><label>&nbsp;</label><div class="btn-group"><button class="btn btn-primary" onclick="applyFilter()">筛选</button><button class="btn btn-default" onclick="clearFilter()">清除</button></div></div>
+        </div>
+      </div>
+      
+      <!-- 核心统计 -->
+      <div class="stats">
+        <div class="stat-card"><div class="label">本月成本</div><div class="value" id="month-cost">¥0</div></div>
+        <div class="stat-card green"><div class="label">本月利润</div><div class="value green" id="month-profit">¥0</div></div>
+        <div class="stat-card green"><div class="label">本月利润率</div><div class="value green" id="month-margin">0%</div></div>
+        <div class="stat-card"><div class="label">总成本</div><div class="value" id="total-cost">¥0</div></div>
+        <div class="stat-card green"><div class="label">总利润</div><div class="value green" id="total-profit">¥0</div></div>
+        <div class="stat-card green"><div class="label">总利润率</div><div class="value green" id="total-margin">0%</div></div>
+      </div>
+      
+      <!-- 收入来源统计 -->
+      <div class="stats">
+        <div class="stat-card green"><div class="label">💚 微信</div><div class="value green" id="total-wx">¥0</div></div>
+        <div class="stat-card blue"><div class="label">💙 支付宝</div><div class="value blue" id="total-ali">¥0</div></div>
+        <div class="stat-card orange"><div class="label">💵 现金</div><div class="value" style="color: var(--orange);" id="total-cash">¥0</div></div>
+        <div class="stat-card gray"><div class="label">📦 其它</div><div class="value" id="total-other">¥0</div></div>
+        <div class="stat-card"><div class="label">📊 总收入</div><div class="value blue" id="total-revenue">¥0</div></div>
+        <div class="stat-card" style="visibility: hidden;"><div class="label">-</div><div class="value">-</div></div>
+      </div>
+      
+      <!-- 历史记录 -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">历史记录</div></div>
+        <div class="table-scroll">
+          <table id="records-table">
+            <thead><tr><th>日期</th><th>微信</th><th>支付宝</th><th>现金</th><th>其它</th><th>总收入</th><th>成本</th><th>利润</th><th>利润率</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty" id="records-empty"><div class="empty-icon">📊</div>暂无记录</div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 删除确认模态框 -->
+  <div class="modal" id="delete-modal">
+    <div class="modal-content">
+      <div class="modal-title">⚠️ 确认删除</div>
+      <div id="delete-message" style="font-size: 15px; color: var(--text-light);">确定要删除吗？</div>
+      <div class="modal-actions">
+        <button class="btn btn-default" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" id="delete-confirm-btn">删除</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 确认模态框 -->
+  <div class="modal" id="confirm-modal">
+    <div class="modal-content">
+      <div class="modal-title" id="confirm-title">确认</div>
+      <div id="confirm-message" style="font-size: 15px; color: var(--text-light);"></div>
+      <div class="modal-actions">
+        <button class="btn btn-default" onclick="closeConfirmModal()">取消</button>
+        <button class="btn btn-primary" id="confirm-btn">确认</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 编辑模态框 -->
+  <div class="modal" id="edit-topping-modal">
+    <div class="modal-content">
+      <div class="modal-title">✏️ 编辑小料/冰底</div>
+      <input type="hidden" id="edit-topping-id">
+      <div class="form-group"><label>名称</label><input type="text" id="edit-top-name"></div>
+      <div class="form-group"><label>类型</label><select id="edit-top-type" onchange="toggleEditPortionField()"><option value="小料">小料</option><option value="冰底">冰底</option></select></div>
+      <div class="form-group" id="edit-top-portion-field" style="display:none;"><label>制成条数</label><input type="number" id="edit-top-portions" min="1"></div>
+      <div style="margin-top: 16px;"><label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 8px;">原料组成：</label><div id="edit-topping-ingredients-list"></div><button class="btn btn-default btn-sm" onclick="addEditToppingIngredientRow()" style="margin-top: 8px;">+ 添加原料</button></div>
+      <div class="modal-actions"><button class="btn btn-default" onclick="closeEditToppingModal()">取消</button><button class="btn btn-primary" onclick="confirmEditTopping()">保存</button></div>
+    </div>
+  </div>
+  
+  <script>
+    // GitHub API 云端同步配置
+    const GITHUB_OWNER = 'anti-mook';
+    const GITHUB_REPO = 'xiyucostaccounting';
+    const GITHUB_TOKEN = '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';
+    const GITHUB_API = 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/data.json';
+    let cloudSha = null; // 云端文件SHA，更新时需要
+    
+    let data = { ingredients: [], toppings: [], records: [] };
+    let deleteCallback = null;
+    let confirmCallback = null;
+    let currentPage = 1;
+    const pageSize = 50;
+    let filteredRecords = [];
+    
+    // 数据加载与保存
+    function saveLocal() { localStorage.setItem('xiyuData', JSON.stringify(data)); }
+    function loadLocal() { const saved = localStorage.getItem('xiyuData'); if (saved) data = JSON.parse(saved); }
+    
+    async function loadData() {
+      // 先从本地加载，页面秒开
+      loadLocal();
+      // 异步从云端拉取最新数据
+      try {
+        const res = await fetch(GITHUB_API, { headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' } });
+        if (res.ok) {
+          const json = await res.json();
+          cloudSha = json.sha;
+          const cloudData = JSON.parse(atob(json.content));
+          // 云端数据更新时间比本地新，则使用云端数据
+          data = cloudData;
+          saveLocal();
+          renderIngredients(); renderToppings();
+        }
+      } catch (e) {
+        console.error('云端加载失败，使用本地数据:', e);
+      }
+    }
+    
+    let syncTimer = null;
+    function saveData() {
+      // 立即存本地，操作即时响应
+      saveLocal();
+      // 防抖：3秒内多次操作只同步一次到云端
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(async () => {
+        try {
+          // 先获取最新SHA
+          let sha = cloudSha;
+          if (!sha) {
+            const res = await fetch(GITHUB_API, { headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' } });
+            if (res.ok) { const json = await res.json(); sha = json.sha; cloudSha = sha; }
+          }
+          const content = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+          const res = await fetch(GITHUB_API, {
+            method: 'PUT',
+            headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '数据同步 ' + new Date().toLocaleString('zh-CN'), content: content, sha: sha })
+          });
+          if (res.ok) { const json = await res.json(); cloudSha = json.content.sha; }
+          else { const err = await res.json(); console.error('云端同步失败:', err.message); }
+        } catch (e) { console.error('云端同步失败:', e); }
+      }, 3000);
+    }
+    
+    function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+    
+    // 页面切换
+    document.querySelectorAll('.nav a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = link.dataset.page;
+        document.querySelectorAll('.nav a').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(page).classList.add('active');
+        if (page === 'home') { setDefaultDate(); renderIngredients(); renderToppings(); }
+        if (page === 'report') { currentPage = 1; renderReport(); }
+      });
+    });
+    
+    // 标签页切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById(tab + '-tab').style.display = 'block';
+      });
+    });
+    
+    function setDefaultDate() { document.getElementById('record-date').value = new Date().toISOString().split('T')[0]; }
+    
+    // 模态框
+    function showDeleteModal(message, callback) { document.getElementById('delete-message').textContent = message; deleteCallback = callback; document.getElementById('delete-modal').classList.add('active'); }
+    function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); deleteCallback = null; }
+    document.getElementById('delete-confirm-btn').addEventListener('click', () => { if (deleteCallback) deleteCallback(); closeDeleteModal(); });
+    
+    function showConfirmModal(title, message, callback) { 
+      document.getElementById('confirm-title').textContent = title; 
+      document.getElementById('confirm-message').textContent = message; 
+      confirmCallback = callback; 
+      document.getElementById('confirm-modal').classList.add('active'); 
+    }
+    function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('active'); confirmCallback = null; }
+    document.getElementById('confirm-btn').addEventListener('click', () => { if (confirmCallback) confirmCallback(); closeConfirmModal(); });
+    
+    // 原料管理
+    async function addIngredient() {
+      const brand = document.getElementById('ing-brand').value.trim();
+      const name = document.getElementById('ing-name').value.trim();
+      const category = document.getElementById('ing-category').value.trim();
+      const weight = parseFloat(document.getElementById('ing-weight').value);
+      const unit = document.getElementById('ing-unit').value;
+      const price = parseFloat(document.getElementById('ing-price').value);
+      if (!brand || !name || !weight || !price) { alert('请填写完整信息'); return; }
+      data.ingredients.push({ id: generateId(), brand, name, category: category || '未分类', weight, unit, price, frozen: false });
+      await saveData(); renderIngredients(); updateCategoryList();
+      document.getElementById('ing-brand').value = ''; document.getElementById('ing-name').value = ''; document.getElementById('ing-category').value = ''; document.getElementById('ing-weight').value = ''; document.getElementById('ing-price').value = '';
+    }
+    
+    async function updateIngredientPrice(id, price) { const ing = data.ingredients.find(i => i.id === id); if (ing) { ing.price = parseFloat(price) || 0; await saveData(); renderToppings(); } }
+    async function toggleIngredientFrozen(id) { const ing = data.ingredients.find(i => i.id === id); if (ing) { ing.frozen = !ing.frozen; await saveData(); renderIngredients(); } }
+    
+    async function editIngredient(id) {
+      const ing = data.ingredients.find(i => i.id === id); if (!ing) return;
+      const newBrand = prompt('品牌:', ing.brand); if (newBrand === null) return;
+      const newName = prompt('产品名:', ing.name); if (newName === null) return;
+      const newCategory = prompt('分类:', ing.category); if (newCategory === null) return;
+      const newWeight = prompt('重量/容量:', ing.weight); if (newWeight === null) return;
+      const newUnit = prompt('单位:', ing.unit); if (newUnit === null) return;
+      if (newBrand && newName && newWeight) {
+        ing.brand = newBrand; ing.name = newName; ing.category = newCategory || '未分类'; ing.weight = parseFloat(newWeight); ing.unit = newUnit || ing.unit;
+        showConfirmModal('✅ 确认保存', '确定保存对原料的修改吗？', async () => { await saveData(); renderIngredients(); updateCategoryList(); });
+      }
+    }
+    
+    function deleteIngredient(id) { showDeleteModal('确定删除这个原料吗？', async () => { data.ingredients = data.ingredients.filter(i => i.id !== id); await saveData(); renderIngredients(); updateCategoryList(); }); }
+    
+    function updateCategoryList() {
+      const categories = [...new Set(data.ingredients.map(i => i.category).filter(c => c))];
+      document.getElementById('category-filter-active').innerHTML = '<option value="">全部分类</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      document.getElementById('category-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
+    }
+    
+    function renderIngredients() {
+      const filterActive = document.getElementById('category-filter-active').value;
+      const active = data.ingredients.filter(i => !i.frozen && (!filterActive || i.category === filterActive));
+      const frozen = data.ingredients.filter(i => i.frozen);
+      
+      const activeTbody = document.querySelector('#ingredients-active-table tbody');
+      const activeEmpty = document.getElementById('ingredients-active-empty');
+      if (active.length === 0) { activeTbody.innerHTML = ''; activeEmpty.style.display = 'block'; }
+      else { activeEmpty.style.display = 'none'; activeTbody.innerHTML = active.map(ing => `<tr><td>${ing.brand}</td><td>${ing.name}</td><td>${ing.category}</td><td>${ing.weight}${ing.unit}</td><td><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
+      
+      const frozenTbody = document.querySelector('#ingredients-frozen-table tbody');
+      const frozenEmpty = document.getElementById('ingredients-frozen-empty');
+      if (frozen.length === 0) { frozenTbody.innerHTML = ''; frozenEmpty.style.display = 'block'; }
+      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozen.map(ing => `<tr class="frozen"><td>${ing.brand}</td><td>${ing.name}</td><td>${ing.category}</td><td>${ing.weight}${ing.unit}</td><td><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
+      
+      updateCategoryList();
+    }
+    
+    // 小料管理
+    function togglePortionField() { document.getElementById('top-portion-field').style.display = document.getElementById('top-type').value === '冰底' ? 'block' : 'none'; }
+    function showToppingForm() { const name = document.getElementById('top-name').value.trim(); if (!name) { alert('请填写名称'); return; } document.getElementById('topping-ingredients-list').innerHTML = ''; document.getElementById('topping-form-card').style.display = 'block'; }
+    function hideToppingForm() { document.getElementById('topping-form-card').style.display = 'none'; }
+    
+    function addToppingIngredientRow() {
+      if (data.ingredients.filter(i => !i.frozen).length === 0) { alert('请先添加原料'); return; }
+      const container = document.getElementById('topping-ingredients-list');
+      const activeIngs = data.ingredients.filter(i => !i.frozen);
+      const categories = [...new Set(activeIngs.map(i => i.category))];
+      let optionsHtml = '';
+      categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; activeIngs.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.name}（${i.brand}）</option>`; }); optionsHtml += `</optgroup>`; });
+      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;';
+      row.innerHTML = `<div class="form-group" style="flex: 3;"><select class="top-ing-select">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>`;
+      container.appendChild(row);
+    }
+    
+    async function saveTopping() {
+      const name = document.getElementById('top-name').value.trim(); const type = document.getElementById('top-type').value; const portions = parseInt(document.getElementById('top-portions').value) || 1;
+      const rows = document.querySelectorAll('#topping-ingredients-list .form-row'); const ingredients = [];
+      rows.forEach(row => { const select = row.querySelector('.top-ing-select'); const ing = data.ingredients.find(i => i.id === select.value); if (ing) ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: 0, unit: ing.unit, weight: ing.weight, price: ing.price }); });
+      if (ingredients.length === 0) { alert('请至少选择一种原料'); return; }
+      data.toppings.push({ id: generateId(), name, type, portions: type === '冰底' ? portions : null, ingredients, frozen: false });
+      await saveData(); renderToppings();
+      document.getElementById('top-name').value = ''; document.getElementById('top-portions').value = ''; hideToppingForm();
+    }
+    
+    async function updateIngredientQuantity(toppingId, ingredientId, quantity) { const top = data.toppings.find(t => t.id === toppingId); if (top) { const ing = top.ingredients.find(i => i.ingredientId === ingredientId); if (ing) { ing.quantity = parseFloat(quantity) || 0; await saveData(); renderToppings(); } } }
+    async function updateToppingPortions(id, portions) { const top = data.toppings.find(t => t.id === id); if (top) { top.portions = parseInt(portions) || 1; await saveData(); renderToppings(); } }
+    async function toggleToppingFrozen(id) { const top = data.toppings.find(t => t.id === id); if (top) { top.frozen = !top.frozen; await saveData(); renderToppings(); } }
+    function toggleEditPortionField() { document.getElementById('edit-top-portion-field').style.display = document.getElementById('edit-top-type').value === '冰底' ? 'block' : 'none'; }
+    
+    function editTopping(id) {
+      const top = data.toppings.find(t => t.id === id); if (!top) return;
+      document.getElementById('edit-topping-id').value = id; document.getElementById('edit-top-name').value = top.name; document.getElementById('edit-top-type').value = top.type; document.getElementById('edit-top-portions').value = top.portions || ''; toggleEditPortionField();
+      const container = document.getElementById('edit-topping-ingredients-list'); container.innerHTML = '';
+      const categories = [...new Set(data.ingredients.map(i => i.category))];
+      let optionsHtml = ''; categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; data.ingredients.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.name}（${i.brand}）</option>`; }); optionsHtml += `</optgroup>`; });
+      top.ingredients.forEach(ing => { const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 6px 0;';
+        row.innerHTML = `<div class="form-group" style="flex: 3;"><select class="edit-top-ing-select">${optionsHtml.replace(`value="${ing.ingredientId}"`, `value="${ing.ingredientId}" selected`)}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>`; container.appendChild(row); });
+      document.getElementById('edit-topping-modal').classList.add('active');
+    }
+    
+    function addEditToppingIngredientRow() {
+      if (data.ingredients.length === 0) { alert('请先添加原料'); return; }
+      const container = document.getElementById('edit-topping-ingredients-list'); const categories = [...new Set(data.ingredients.map(i => i.category))];
+      let optionsHtml = ''; categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; data.ingredients.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.name}（${i.brand}）</option>`; }); optionsHtml += `</optgroup>`; });
+      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 6px 0;';
+      row.innerHTML = `<div class="form-group" style="flex: 3;"><select class="edit-top-ing-select">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>`; container.appendChild(row);
+    }
+    
+    function confirmEditTopping() {
+      showConfirmModal('✅ 确认保存', '确定保存对小料/冰底的修改吗？', async () => {
+        const id = document.getElementById('edit-topping-id').value; const name = document.getElementById('edit-top-name').value.trim(); const type = document.getElementById('edit-top-type').value; const portions = parseInt(document.getElementById('edit-top-portions').value) || 1;
+        const rows = document.querySelectorAll('#edit-topping-ingredients-list .form-row'); const ingredients = [];
+        rows.forEach(row => { const select = row.querySelector('.edit-top-ing-select'); const ing = data.ingredients.find(i => i.id === select.value); if (ing) { const oldTop = data.toppings.find(t => t.id === id); const oldIng = oldTop ? oldTop.ingredients.find(i => i.ingredientId === ing.id) : null; ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: oldIng ? oldIng.quantity : 0, unit: ing.unit, weight: ing.weight, price: ing.price }); } });
+        if (ingredients.length === 0) { alert('请至少选择一种原料'); return; }
+        const top = data.toppings.find(t => t.id === id); if (top) { top.name = name; top.type = type; top.portions = type === '冰底' ? portions : null; top.ingredients = ingredients; await saveData(); renderToppings(); }
+        closeEditToppingModal();
+      });
+    }
+    
+    function closeEditToppingModal() { document.getElementById('edit-topping-modal').classList.remove('active'); }
+    function deleteTopping(id) { showDeleteModal('确定删除吗？', async () => { data.toppings = data.toppings.filter(t => t.id !== id); await saveData(); renderToppings(); }); }
+    
+    function calculateUnitCost(topping) {
+      let totalCost = 0; topping.ingredients.forEach(ing => { const ingredient = data.ingredients.find(i => i.id === ing.ingredientId); if (ingredient && ingredient.weight > 0) totalCost += (ing.quantity / ingredient.weight) * ingredient.price; });
+      if (topping.type === '冰底' && topping.portions > 0) return totalCost / topping.portions; return totalCost;
+    }
+    
+    function renderToppings() {
+      const activeToppings = data.toppings.filter(t => !t.frozen && t.type === '小料'); const activeBases = data.toppings.filter(t => !t.frozen && t.type === '冰底'); const frozenAll = data.toppings.filter(t => t.frozen);
+      
+      const topTbody = document.querySelector('#toppings-active-table tbody'); const topEmpty = document.getElementById('toppings-active-empty');
+      if (activeToppings.length === 0) { topTbody.innerHTML = ''; topEmpty.style.display = 'block'; }
+      else { topEmpty.style.display = 'none'; topTbody.innerHTML = activeToppings.map(top => {
+        const ingredientsHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
+        return `<tr><td style="font-weight:600;">${top.name}</td><td><div class="topping-detail">${ingredientsHtml}</div></td><td style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+      }).join(''); }
+      
+      const baseTbody = document.querySelector('#bases-active-table tbody'); const baseEmpty = document.getElementById('bases-active-empty');
+      if (activeBases.length === 0) { baseTbody.innerHTML = ''; baseEmpty.style.display = 'block'; }
+      else { baseEmpty.style.display = 'none'; baseTbody.innerHTML = activeBases.map(top => {
+        const ingredientsHtml = top.ingredients.map(ing => `<div class="topping-ing"><span class="topping-ing-name">${ing.ingredientName}（${ing.brand}）</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
+        return `<tr><td style="font-weight:600;">${top.name}</td><td><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td><div class="topping-detail">${ingredientsHtml}</div></td><td style="font-weight:700;color:var(--orange);">¥${calculateUnitCost(top).toFixed(2)}</td><td><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+      }).join(''); }
+      
+      const frozenTbody = document.querySelector('#toppings-frozen-table tbody'); const frozenEmpty = document.getElementById('toppings-frozen-empty');
+      if (frozenAll.length === 0) { frozenTbody.innerHTML = ''; frozenEmpty.style.display = 'block'; }
+      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozenAll.map(top => `<tr class="frozen"><td>${top.name}</td><td><span class="type-tag ${top.type === '小料' ? 'topping' : 'base'}">${top.type}</span></td><td style="font-size:12px;color:#999;">${top.ingredients.map(i => `${i.ingredientName}（${i.brand}）`).join('、')}</td><td>¥${calculateUnitCost(top).toFixed(2)}</td><td><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`).join(''); }
+    }
+    
+    // 记录
+    async function saveRecord() {
+      const date = document.getElementById('record-date').value; if (!date) { alert('请选择日期'); return; }
+      const wxPersonal = parseFloat(document.getElementById('rev-wx-personal').value) || 0; const wxWork = parseFloat(document.getElementById('rev-wx-work').value) || 0;
+      const aliPersonal = parseFloat(document.getElementById('rev-ali-personal').value) || 0; const aliWork = parseFloat(document.getElementById('rev-ali-work').value) || 0;
+      const cash = parseFloat(document.getElementById('rev-cash').value) || 0; const other = parseFloat(document.getElementById('rev-other').value) || 0;
+      const wx = wxPersonal + wxWork; const ali = aliPersonal + aliWork; const totalRevenue = wx + ali + cash + other;
+      let totalCost = 0; data.toppings.filter(t => !t.frozen).forEach(top => { totalCost += calculateUnitCost(top); });
+      const profit = totalRevenue - totalCost;
+      const record = { id: generateId(), date, wxPersonal, wxWork, aliPersonal, aliWork, cash, other, wx, ali, totalRevenue, totalCost, profit };
+      const existingIndex = data.records.findIndex(r => r.date === date);
+      if (existingIndex >= 0) data.records[existingIndex] = record; else data.records.push(record);
+      await saveData();
+      alert(`✅ 记录成功！\n\n微信：¥${wx.toFixed(2)}\n支付宝：¥${ali.toFixed(2)}\n现金：¥${cash.toFixed(2)}\n其它：¥${other.toFixed(2)}\n\n总收入：¥${totalRevenue.toFixed(2)}\n成本：¥${totalCost.toFixed(2)}\n利润：¥${profit.toFixed(2)}`);
+      ['rev-wx-personal','rev-wx-work','rev-ali-personal','rev-ali-work','rev-cash','rev-other'].forEach(id => document.getElementById(id).value = '');
+    }
+    
+    // 看板
+    function applyFilter() { currentPage = 1; renderReport(true); }
+    function clearFilter() { document.getElementById('filter-start-date').value = ''; document.getElementById('filter-end-date').value = ''; currentPage = 1; renderReport(false); }
+    
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredRecords.length / pageSize);
+      const pagination = document.getElementById('pagination');
+      
+      if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+      
+      let html = `<button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>首页</button>`;
+      html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+      
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, currentPage + 2);
+      
+      for (let i = start; i <= end; i++) {
+        html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+      }
+      
+      html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+      html += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>末页</button>`;
+      html += `<span class="pagination-info">第 ${currentPage}/${totalPages} 页，共 ${filteredRecords.length} 条</span>`;
+      
+      pagination.innerHTML = html;
+    }
+    
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredRecords.length / pageSize);
+      if (page < 1) page = 1;
+      if (page > totalPages) page = totalPages;
+      currentPage = page;
+      renderReportTable();
+      renderPagination();
+    }
+    
+    function renderReport(isFiltered = false) {
+      const startDate = document.getElementById('filter-start-date').value; const endDate = document.getElementById('filter-end-date').value;
+      filteredRecords = data.records;
+      if (isFiltered) { if (startDate) filteredRecords = filteredRecords.filter(r => r.date >= startDate); if (endDate) filteredRecords = filteredRecords.filter(r => r.date <= endDate); }
+      
+      const now = new Date(); const monthRecords = data.records.filter(r => { const d = new Date(r.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+      const monthCost = monthRecords.reduce((s, r) => s + r.totalCost, 0); const monthRevenue = monthRecords.reduce((s, r) => s + r.totalRevenue, 0); const monthProfit = monthRevenue - monthCost;
+      document.getElementById('month-cost').textContent = `¥${monthCost.toFixed(2)}`; document.getElementById('month-profit').textContent = `¥${monthProfit.toFixed(2)}`; document.getElementById('month-margin').textContent = monthRevenue > 0 ? `${((monthProfit / monthRevenue) * 100).toFixed(1)}%` : '0%';
+      
+      const totalCost = filteredRecords.reduce((s, r) => s + r.totalCost, 0); const totalRevenue = filteredRecords.reduce((s, r) => s + r.totalRevenue, 0); const totalProfit = totalRevenue - totalCost;
+      const totalWx = filteredRecords.reduce((s, r) => s + (r.wx || 0), 0); const totalAli = filteredRecords.reduce((s, r) => s + (r.ali || 0), 0); const totalCash = filteredRecords.reduce((s, r) => s + (r.cash || 0), 0); const totalOther = filteredRecords.reduce((s, r) => s + (r.other || 0), 0);
+      document.getElementById('total-cost').textContent = `¥${totalCost.toFixed(2)}`; document.getElementById('total-profit').textContent = `¥${totalProfit.toFixed(2)}`; document.getElementById('total-margin').textContent = totalRevenue > 0 ? `${((totalProfit / totalRevenue) * 100).toFixed(1)}%` : '0%';
+      document.getElementById('total-wx').textContent = `¥${totalWx.toFixed(2)}`; document.getElementById('total-ali').textContent = `¥${totalAli.toFixed(2)}`; document.getElementById('total-cash').textContent = `¥${totalCash.toFixed(2)}`; document.getElementById('total-other').textContent = `¥${totalOther.toFixed(2)}`; document.getElementById('total-revenue').textContent = `¥${totalRevenue.toFixed(2)}`;
+      
+      renderReportTable();
+      renderPagination();
+    }
+    
+    function renderReportTable() {
+      const empty = document.getElementById('records-empty');
+      if (filteredRecords.length === 0) { document.querySelector('#records-table tbody').innerHTML = ''; empty.style.display = 'block'; document.getElementById('pagination').innerHTML = ''; return; }
+      empty.style.display = 'none';
+      
+      const sorted = [...filteredRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = sorted.slice(start, end);
+      
+      document.querySelector('#records-table tbody').innerHTML = pageData.map(r => `<tr><td>${r.date}</td><td>¥${(r.wx || 0).toFixed(2)}</td><td>¥${(r.ali || 0).toFixed(2)}</td><td>¥${(r.cash || 0).toFixed(2)}</td><td>¥${(r.other || 0).toFixed(2)}</td><td>¥${(r.totalRevenue || 0).toFixed(2)}</td><td>¥${(r.totalCost || 0).toFixed(2)}</td><td class="${(r.profit || 0) >= 0 ? '' : 'delete-confirm'}">¥${(r.profit || 0).toFixed(2)}</td><td>${r.totalRevenue > 0 ? ((r.profit / r.totalRevenue) * 100).toFixed(1) + '%' : '-'}</td><td><div class="btn-group"><button class="btn btn-default btn-sm" onclick="editRecord('${r.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button></div></td></tr>`).join('');
+    }
+    
+    async function editRecord(id) {
+      const record = data.records.find(r => r.id === id); if (!record) return;
+      const newWxP = prompt('微信-个人:', record.wxPersonal || 0); if (newWxP === null) return;
+      const newWxW = prompt('微信-工作机:', record.wxWork || 0); if (newWxW === null) return;
+      const newAliP = prompt('支付宝-个人:', record.aliPersonal || 0); if (newAliP === null) return;
+      const newAliW = prompt('支付宝-工作机:', record.aliWork || 0); if (newAliW === null) return;
+      const newCash = prompt('现金:', record.cash || 0); if (newCash === null) return;
+      const newOther = prompt('其它:', record.other || 0); if (newOther === null) return;
+      const newCost = prompt('成本:', record.totalCost || 0); if (newCost === null) return;
+      record.wxPersonal = parseFloat(newWxP) || 0; record.wxWork = parseFloat(newWxW) || 0; record.aliPersonal = parseFloat(newAliP) || 0; record.aliWork = parseFloat(newAliW) || 0; record.cash = parseFloat(newCash) || 0; record.other = parseFloat(newOther) || 0;
+      record.wx = record.wxPersonal + record.wxWork; record.ali = record.aliPersonal + record.aliWork; record.totalRevenue = record.wx + record.ali + record.cash + record.other; record.totalCost = parseFloat(newCost) || 0; record.profit = record.totalRevenue - record.totalCost;
+      
+      showConfirmModal('✅ 确认保存', '确定保存对记录的修改吗？', async () => { await saveData(); renderReport(); });
+    }
+    
+    function deleteRecord(id) { showDeleteModal('确定删除这条记录吗？', async () => { data.records = data.records.filter(r => r.id !== id); await saveData(); renderReport(); }); }
+    
+    // 初始化
+    async function init() { await loadData(); setDefaultDate(); renderIngredients(); renderToppings(); }
+    init();
+  </script>
+</body>
+</html>
