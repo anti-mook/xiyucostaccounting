@@ -182,7 +182,7 @@
     .topping-detail-row-qty .inline-input { width: 50px; padding: 2px 4px; font-size: 12px; }
     .topping-detail-row-qty span { font-size: 11px; color: #999; }
     .topping-cost-line { font-weight: 700; color: var(--orange); font-size: 13px; padding: 6px 2px 4px; }
-    .topping-ops-line { padding: 2px 0; }
+    .topping-ops-line { display: flex; justify-content: flex-end; padding: 2px 0; }
     
     /* 区块标题带筛选 */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
@@ -245,7 +245,7 @@
           </div>
           <div class="table-scroll">
             <table id="ingredients-active-table">
-              <thead><tr><th>品牌/产品</th><th>类别/规格</th><th>价格</th><th>操作</th></tr></thead>
+              <thead><tr><th>品牌</th><th>产品</th><th>类别</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -257,7 +257,7 @@
           <div class="section-title" style="margin-bottom: 16px;">❄️ 冻结区</div>
           <div class="table-scroll">
             <table id="ingredients-frozen-table">
-              <thead><tr><th>品牌/产品</th><th>类别/规格</th><th>价格</th><th>操作</th></tr></thead>
+              <thead><tr><th>品牌</th><th>产品</th><th>类别</th><th>规格</th><th>价格</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
