@@ -442,7 +442,7 @@
         if (res.ok) {
           const json = await res.json();
           cloudSha = json.sha;
-          const cloudData = JSON.parse(atob(json.content));
+          const cloudData = JSON.parse(decodeURIComponent(escape(atob(json.content))));
           // 云端数据更新时间比本地新，则使用云端数据
           data = cloudData;
           saveLocal();
