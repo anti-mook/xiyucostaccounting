@@ -184,6 +184,18 @@
     .topping-cost-line { font-weight: 700; color: var(--orange); font-size: 13px; padding: 6px 2px 4px; }
     .topping-ops-line { display: flex; justify-content: flex-end; padding: 2px 0; }
     
+    /* 原料选择器 */
+    .ingredient-picker { max-height: 50vh; overflow-y: auto; }
+    .picker-category { margin-bottom: 12px; }
+    .picker-category-title { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
+    .picker-category-title .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .picker-items { display: flex; flex-wrap: wrap; gap: 6px; }
+    .picker-item { padding: 5px 10px; border-radius: 8px; font-size: 12px; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; transition: all 0.15s; user-select: none; }
+    .picker-item:hover { border-color: #bbb; background: #f8f8f8; }
+    .picker-item.selected { border-color: var(--primary-light); background: #e8f0fe; color: var(--primary); font-weight: 600; }
+    .picker-item .pick-brand { color: #999; font-weight: 400; }
+    .picker-selected-count { font-size: 12px; color: var(--text-light); padding: 8px 0 0; border-top: 1px solid #eee; margin-top: 8px; }
+    
     /* 区块标题带筛选 */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
     .section-title { font-size: 15px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
@@ -282,7 +294,6 @@
         <div class="card" id="topping-form-card" style="display:none; border: 2px dashed var(--primary-light); background: #f8fafd;">
           <div class="card-header"><div class="card-title">选择原料组成</div></div>
           <div id="topping-ingredients-list"></div>
-          <button class="btn btn-default btn-sm" onclick="addToppingIngredientRow()" style="margin: 12px 0;">+ 添加原料</button>
           <div class="btn-group" style="margin-top: 16px;">
             <button class="btn btn-success" onclick="saveTopping()">确认添加</button>
             <button class="btn btn-default" onclick="hideToppingForm()">取消</button>
@@ -446,8 +457,25 @@
       <div class="form-group"><label>名称</label><input type="text" id="edit-top-name"></div>
       <div class="form-group"><label>类型</label><select id="edit-top-type" onchange="toggleEditPortionField()"><option value="小料">小料</option><option value="冰底">冰底</option></select></div>
       <div class="form-group" id="edit-top-portion-field" style="display:none;"><label>制成条数</label><input type="number" id="edit-top-portions" min="1"></div>
-      <div style="margin-top: 16px;"><label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 8px;">原料组成：</label><div id="edit-topping-ingredients-list"></div><button class="btn btn-default btn-sm" onclick="addEditToppingIngredientRow()" style="margin-top: 8px;">+ 添加原料</button></div>
+      <div style="margin-top: 16px;"><label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 8px;">原料组成：</label><div id="edit-topping-ingredients-list"></div></div>
       <div class="modal-actions"><button class="btn btn-default" onclick="closeEditToppingModal()">取消</button><button class="btn btn-primary" onclick="confirmEditTopping()">保存</button></div>
+    </div>
+  </div>
+  
+  <!-- 编辑原料模态框 -->
+  <div class="modal" id="edit-ingredient-modal">
+    <div class="modal-content">
+      <div class="modal-title">✏️ 编辑原料</div>
+      <input type="hidden" id="edit-ing-id">
+      <div class="form-group" style="margin-bottom:12px;"><label>品牌</label><input type="text" id="edit-ing-brand"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>产品名</label><input type="text" id="edit-ing-name"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>分类</label><input type="text" id="edit-ing-category" list="edit-category-list"><datalist id="edit-category-list"></datalist></div>
+      <div class="form-row">
+        <div class="form-group"><label>重量/容量</label><input type="number" id="edit-ing-weight" step="0.01"></div>
+        <div class="form-group"><label>单位</label><select id="edit-ing-unit"><option value="ml">ml</option><option value="g">g</option></select></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;"><label>价格(元)</label><input type="number" id="edit-ing-price" step="0.01"></div>
+      <div class="modal-actions"><button class="btn btn-default" onclick="closeEditIngredientModal()">取消</button><button class="btn btn-primary" onclick="confirmEditIngredient()">保存</button></div>
     </div>
   </div>
   
@@ -586,17 +614,35 @@
     async function updateIngredientPrice(id, price) { const ing = data.ingredients.find(i => i.id === id); if (ing) { ing.price = parseFloat(price) || 0; await saveData(); renderToppings(); } }
     async function toggleIngredientFrozen(id) { const ing = data.ingredients.find(i => i.id === id); if (!ing) return; const action = ing.frozen ? '启用' : '冻结'; showConfirmModal('确认' + action, `确定${action}「${ing.name}」吗？`, async () => { ing.frozen = !ing.frozen; await saveData(); renderIngredients(); }); }
     
-    async function editIngredient(id) {
+    function editIngredient(id) {
       const ing = data.ingredients.find(i => i.id === id); if (!ing) return;
-      const newBrand = prompt('品牌:', ing.brand); if (newBrand === null) return;
-      const newName = prompt('产品名:', ing.name); if (newName === null) return;
-      const newCategory = prompt('分类:', ing.category); if (newCategory === null) return;
-      const newWeight = prompt('重量/容量:', ing.weight); if (newWeight === null) return;
-      const newUnit = prompt('单位:', ing.unit); if (newUnit === null) return;
-      if (newBrand && newName && newWeight) {
-        ing.brand = newBrand; ing.name = newName; ing.category = newCategory || '未分类'; ing.weight = parseFloat(newWeight); ing.unit = newUnit || ing.unit;
-        showConfirmModal('✅ 确认保存', '确定保存对原料的修改吗？', async () => { await saveData(); renderIngredients(); updateCategoryList(); });
-      }
+      document.getElementById('edit-ing-id').value = id;
+      document.getElementById('edit-ing-brand').value = ing.brand;
+      document.getElementById('edit-ing-name').value = ing.name;
+      document.getElementById('edit-ing-category').value = ing.category;
+      document.getElementById('edit-ing-weight').value = ing.weight;
+      document.getElementById('edit-ing-unit').value = ing.unit;
+      document.getElementById('edit-ing-price').value = ing.price;
+      const categories = [...new Set(data.ingredients.map(i => i.category).filter(c => c))];
+      document.getElementById('edit-category-list').innerHTML = categories.map(c => '<option value="' + c + '">').join('');
+      document.getElementById('edit-ingredient-modal').classList.add('active');
+    }
+    function closeEditIngredientModal() { document.getElementById('edit-ingredient-modal').classList.remove('active'); }
+    function confirmEditIngredient() {
+      showConfirmModal('✅ 确认保存', '确定保存对原料的修改吗？', async () => {
+        const id = document.getElementById('edit-ing-id').value;
+        const ing = data.ingredients.find(i => i.id === id); if (!ing) return;
+        const newBrand = document.getElementById('edit-ing-brand').value.trim();
+        const newName = document.getElementById('edit-ing-name').value.trim();
+        const newCategory = document.getElementById('edit-ing-category').value.trim() || '未分类';
+        const newWeight = parseFloat(document.getElementById('edit-ing-weight').value);
+        const newUnit = document.getElementById('edit-ing-unit').value;
+        const newPrice = parseFloat(document.getElementById('edit-ing-price').value);
+        if (!newBrand || !newName || !newWeight) { alert('品牌、产品名、重量/容量不能为空'); return; }
+        ing.brand = newBrand; ing.name = newName; ing.category = newCategory; ing.weight = newWeight; ing.unit = newUnit; ing.price = newPrice || ing.price;
+        await saveData(); renderIngredients(); updateCategoryList();
+        closeEditIngredientModal();
+      });
     }
     
     function deleteIngredient(id) { showDeleteModal('确定删除这个原料吗？', async () => { data.ingredients = data.ingredients.filter(i => i.id !== id); await saveData(); renderIngredients(); updateCategoryList(); }); }
@@ -628,25 +674,50 @@
     
     // 小料管理
     function togglePortionField() { document.getElementById('top-portion-field').style.display = document.getElementById('top-type').value === '冰底' ? 'block' : 'none'; }
-    function showToppingForm() { const name = document.getElementById('top-name').value.trim(); if (!name) { alert('请填写名称'); return; } document.getElementById('topping-ingredients-list').innerHTML = ''; document.getElementById('topping-form-card').style.display = 'block'; }
+    function showToppingForm() { const name = document.getElementById('top-name').value.trim(); if (!name) { alert('请填写名称'); return; } document.getElementById('topping-form-card').style.display = 'block'; renderIngredientPicker('topping-ingredients-list'); }
     function hideToppingForm() { document.getElementById('topping-form-card').style.display = 'none'; }
     
-    function addToppingIngredientRow() {
-      if (data.ingredients.filter(i => !i.frozen).length === 0) { alert('请先添加原料'); return; }
-      const container = document.getElementById('topping-ingredients-list');
+    const pickerColors = ['#1565c0','#2e7d32','#e65100','#c62828','#7b1fa2','#00695c','#f57f17','#4e342e'];
+    function renderIngredientPicker(containerId, selectedIds) {
+      if (!selectedIds) selectedIds = [];
+      const container = document.getElementById(containerId);
       const activeIngs = data.ingredients.filter(i => !i.frozen);
+      if (activeIngs.length === 0) { container.innerHTML = '<div style="color:#999;font-size:13px;padding:12px;">暂无启用的原料，请先添加</div>'; return; }
       const categories = [...new Set(activeIngs.map(i => i.category))];
-      let optionsHtml = '';
-      categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; activeIngs.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.brand} · ${i.name}（${i.weight}${i.unit}）</option>`; }); optionsHtml += `</optgroup>`; });
-      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee; background: #fafbfc; border-radius: 8px; margin-bottom: 6px;';
-      row.innerHTML = `<div class="form-group" style="flex: 1; margin: 0; min-width: 0;"><select class="top-ing-select" style="width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;background:#fff;">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-left:8px;flex-shrink:0;">✕</button>`;
-      container.appendChild(row);
+      let html = '<div class="ingredient-picker">';
+      let catIdx = 0;
+      categories.forEach(cat => {
+        const color = pickerColors[catIdx % pickerColors.length];
+        const items = activeIngs.filter(i => i.category === cat);
+        html += '<div class="picker-category">';
+        html += '<div class="picker-category-title"><span class="cat-dot" style="background:' + color + '"></span>' + cat + '</div>';
+        html += '<div class="picker-items">';
+        items.forEach(ing => {
+          const isSelected = selectedIds.includes(ing.id);
+          html += '<div class="picker-item' + (isSelected ? ' selected' : '') + '" data-id="' + ing.id + '" onclick="togglePickerItem(this,\'' + containerId + '\')">' + ing.name + '<span class="pick-brand">（' + ing.brand + '）</span></div>';
+        });
+        html += '</div></div>';
+        catIdx++;
+      });
+      html += '<div class="picker-selected-count" id="' + containerId + '-count">已选 ' + selectedIds.length + ' 种原料</div>';
+      html += '</div>';
+      container.innerHTML = html;
+    }
+    function togglePickerItem(el, containerId) {
+      el.classList.toggle('selected');
+      const selected = document.querySelectorAll('#' + containerId + ' .picker-item.selected');
+      const countEl = document.getElementById(containerId + '-count');
+      if (countEl) countEl.textContent = '已选 ' + selected.length + ' 种原料';
+    }
+    function getSelectedIngredientIds(containerId) {
+      return [...document.querySelectorAll('#' + containerId + ' .picker-item.selected')].map(el => el.dataset.id);
     }
     
     async function saveTopping() {
       const name = document.getElementById('top-name').value.trim(); const type = document.getElementById('top-type').value; const portions = parseInt(document.getElementById('top-portions').value) || 1;
-      const rows = document.querySelectorAll('#topping-ingredients-list .form-row'); const ingredients = [];
-      rows.forEach(row => { const select = row.querySelector('.top-ing-select'); const ing = data.ingredients.find(i => i.id === select.value); if (ing) ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: 0, unit: ing.unit, weight: ing.weight, price: ing.price }); });
+      const selectedIds = getSelectedIngredientIds('topping-ingredients-list');
+      const ingredients = [];
+      selectedIds.forEach(sid => { const ing = data.ingredients.find(i => i.id === sid); if (ing) ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: 0, unit: ing.unit, weight: ing.weight, price: ing.price }); });
       if (ingredients.length === 0) { alert('请至少选择一种原料'); return; }
       data.toppings.push({ id: generateId(), name, type, portions: type === '冰底' ? portions : null, ingredients, frozen: false });
       await saveData(); renderToppings();
@@ -661,27 +732,17 @@
     function editTopping(id) {
       const top = data.toppings.find(t => t.id === id); if (!top) return;
       document.getElementById('edit-topping-id').value = id; document.getElementById('edit-top-name').value = top.name; document.getElementById('edit-top-type').value = top.type; document.getElementById('edit-top-portions').value = top.portions || ''; toggleEditPortionField();
-      const container = document.getElementById('edit-topping-ingredients-list'); container.innerHTML = '';
-      const categories = [...new Set(data.ingredients.map(i => i.category))];
-      let optionsHtml = ''; categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; data.ingredients.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.name}（${i.brand}）</option>`; }); optionsHtml += `</optgroup>`; });
-      top.ingredients.forEach(ing => { const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 6px 0;';
-        row.innerHTML = `<div class="form-group" style="flex: 3;"><select class="edit-top-ing-select">${optionsHtml.replace(`value="${ing.ingredientId}"`, `value="${ing.ingredientId}" selected`)}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>`; container.appendChild(row); });
+      const selectedIds = top.ingredients.map(i => i.ingredientId);
+      renderIngredientPicker('edit-topping-ingredients-list', selectedIds);
       document.getElementById('edit-topping-modal').classList.add('active');
-    }
-    
-    function addEditToppingIngredientRow() {
-      if (data.ingredients.length === 0) { alert('请先添加原料'); return; }
-      const container = document.getElementById('edit-topping-ingredients-list'); const categories = [...new Set(data.ingredients.map(i => i.category))];
-      let optionsHtml = ''; categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; data.ingredients.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.brand} · ${i.name}（${i.weight}${i.unit}）</option>`; }); optionsHtml += `</optgroup>`; });
-      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 10px 12px; background: #fafbfc; border-radius: 8px; margin-bottom: 6px;';
-      row.innerHTML = `<div class="form-group" style="flex: 1; margin: 0; min-width: 0;"><select class="edit-top-ing-select" style="width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;background:#fff;">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-left:8px;flex-shrink:0;">✕</button>`; container.appendChild(row);
     }
     
     function confirmEditTopping() {
       showConfirmModal('✅ 确认保存', '确定保存对小料/冰底的修改吗？', async () => {
         const id = document.getElementById('edit-topping-id').value; const name = document.getElementById('edit-top-name').value.trim(); const type = document.getElementById('edit-top-type').value; const portions = parseInt(document.getElementById('edit-top-portions').value) || 1;
-        const rows = document.querySelectorAll('#edit-topping-ingredients-list .form-row'); const ingredients = [];
-        rows.forEach(row => { const select = row.querySelector('.edit-top-ing-select'); const ing = data.ingredients.find(i => i.id === select.value); if (ing) { const oldTop = data.toppings.find(t => t.id === id); const oldIng = oldTop ? oldTop.ingredients.find(i => i.ingredientId === ing.id) : null; ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: oldIng ? oldIng.quantity : 0, unit: ing.unit, weight: ing.weight, price: ing.price }); } });
+        const selectedIds = getSelectedIngredientIds('edit-topping-ingredients-list');
+        const ingredients = [];
+        selectedIds.forEach(ingId => { const ing = data.ingredients.find(i => i.id === ingId); if (ing) { const oldTop = data.toppings.find(t => t.id === id); const oldIng = oldTop ? oldTop.ingredients.find(i => i.ingredientId === ing.id) : null; ingredients.push({ ingredientId: ing.id, ingredientName: ing.name, brand: ing.brand, quantity: oldIng ? oldIng.quantity : 0, unit: ing.unit, weight: ing.weight, price: ing.price }); } });
         if (ingredients.length === 0) { alert('请至少选择一种原料'); return; }
         const top = data.toppings.find(t => t.id === id); if (top) { top.name = name; top.type = type; top.portions = type === '冰底' ? portions : null; top.ingredients = ingredients; await saveData(); renderToppings(); }
         closeEditToppingModal();
