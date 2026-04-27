@@ -234,7 +234,7 @@
           </div>
           <div class="table-scroll">
             <table id="ingredients-active-table">
-              <thead><tr><th>品牌</th><th>产品</th><th>类别/规格</th><th>价格</th><th>操作</th></tr></thead>
+              <thead><tr><th>品牌/产品</th><th>类别/规格</th><th>价格</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -246,7 +246,7 @@
           <div class="section-title" style="margin-bottom: 16px;">❄️ 冻结区</div>
           <div class="table-scroll">
             <table id="ingredients-frozen-table">
-              <thead><tr><th>品牌</th><th>产品</th><th>类别/规格</th><th>价格</th><th>操作</th></tr></thead>
+              <thead><tr><th>品牌/产品</th><th>类别/规格</th><th>价格</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -561,7 +561,7 @@
     }
     
     async function updateIngredientPrice(id, price) { const ing = data.ingredients.find(i => i.id === id); if (ing) { ing.price = parseFloat(price) || 0; await saveData(); renderToppings(); } }
-    async function toggleIngredientFrozen(id) { const ing = data.ingredients.find(i => i.id === id); if (ing) { ing.frozen = !ing.frozen; await saveData(); renderIngredients(); } }
+    async function toggleIngredientFrozen(id) { const ing = data.ingredients.find(i => i.id === id); if (!ing) return; const action = ing.frozen ? '启用' : '冻结'; showConfirmModal('确认' + action, `确定${action}「${ing.name}」吗？`, async () => { ing.frozen = !ing.frozen; await saveData(); renderIngredients(); }); }
     
     async function editIngredient(id) {
       const ing = data.ingredients.find(i => i.id === id); if (!ing) return;
@@ -593,12 +593,12 @@
       const activeTbody = document.querySelector('#ingredients-active-table tbody');
       const activeEmpty = document.getElementById('ingredients-active-empty');
       if (active.length === 0) { activeTbody.innerHTML = ''; activeEmpty.style.display = 'block'; }
-      else { activeEmpty.style.display = 'none'; activeTbody.innerHTML = active.map(ing => `<tr><td data-label="品牌" class="m-col-name">${ing.brand}</td><td data-label="产品">${ing.name}</td><td data-label="类别"><span class="cat-tag ${getCatClass(ing.category)}">${ing.category}</span><span style="color:#999;margin-left:6px;">${ing.weight}${ing.unit}</span></td><td data-label="价格"><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
+      else { activeEmpty.style.display = 'none'; activeTbody.innerHTML = active.map(ing => `<tr><td data-label="品牌" class="m-col-name">${ing.brand} ${ing.name}</td><td data-label="类别"><span class="cat-tag ${getCatClass(ing.category)}">${ing.category}</span> <span style="color:#999;">${ing.weight}${ing.unit}</span></td><td data-label="价格"><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
       
       const frozenTbody = document.querySelector('#ingredients-frozen-table tbody');
       const frozenEmpty = document.getElementById('ingredients-frozen-empty');
       if (frozen.length === 0) { frozenTbody.innerHTML = ''; frozenEmpty.style.display = 'block'; }
-      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozen.map(ing => `<tr class="frozen"><td data-label="品牌" class="m-col-name">${ing.brand}</td><td data-label="产品">${ing.name}</td><td data-label="类别"><span class="cat-tag ${getCatClass(ing.category)}">${ing.category}</span><span style="color:#999;margin-left:6px;">${ing.weight}${ing.unit}</span></td><td data-label="价格"><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
+      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozen.map(ing => `<tr class="frozen"><td data-label="品牌" class="m-col-name">${ing.brand} ${ing.name}</td><td data-label="类别"><span class="cat-tag ${getCatClass(ing.category)}">${ing.category}</span> <span style="color:#999;">${ing.weight}${ing.unit}</span></td><td data-label="价格"><input type="number" class="inline-input" value="${ing.price}" step="0.01" onchange="updateIngredientPrice('${ing.id}', this.value)"></td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleIngredientFrozen('${ing.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editIngredient('${ing.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteIngredient('${ing.id}')">删除</button></div></td></tr>`).join(''); }
       
       updateCategoryList();
     }
@@ -632,7 +632,7 @@
     
     async function updateIngredientQuantity(toppingId, ingredientId, quantity) { const top = data.toppings.find(t => t.id === toppingId); if (top) { const ing = top.ingredients.find(i => i.ingredientId === ingredientId); if (ing) { ing.quantity = parseFloat(quantity) || 0; await saveData(); renderToppings(); } } }
     async function updateToppingPortions(id, portions) { const top = data.toppings.find(t => t.id === id); if (top) { top.portions = parseInt(portions) || 1; await saveData(); renderToppings(); } }
-    async function toggleToppingFrozen(id) { const top = data.toppings.find(t => t.id === id); if (top) { top.frozen = !top.frozen; await saveData(); renderToppings(); } }
+    async function toggleToppingFrozen(id) { const top = data.toppings.find(t => t.id === id); if (!top) return; const action = top.frozen ? '启用' : '冻结'; showConfirmModal('确认' + action, `确定${action}「${top.name}」吗？`, async () => { top.frozen = !top.frozen; await saveData(); renderToppings(); }); }
     function toggleEditPortionField() { document.getElementById('edit-top-portion-field').style.display = document.getElementById('edit-top-type').value === '冰底' ? 'block' : 'none'; }
     
     function editTopping(id) {
