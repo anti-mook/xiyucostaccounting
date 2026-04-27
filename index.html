@@ -165,13 +165,20 @@
     .income-item input { width: 100%; padding: 10px 12px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 15px; font-weight: 600; background: #fff; }
     .income-item input:focus { outline: none; border-color: var(--primary-light); }
     
-    /* 小料详情 */
-    .topping-detail { background: #f8fafd; border-radius: 10px; padding: 12px; }
-    .topping-ing { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .topping-ing:last-child { border-bottom: none; }
-    .topping-ing-name { flex: 1; font-size: 13px; color: var(--text); min-width: 80px; }
-    @media (min-width: 768px) { .topping-ing-name { min-width: 120px; font-size: 14px; } }
-    .topping-ing-cost { font-size: 11px; color: var(--text-light); }
+    /* 小料详情卡片 */
+    .topping-detail-card { width: 100%; }
+    .topping-detail-thead { display: flex; justify-content: space-between; padding: 2px 4px; border-bottom: 1px solid #e0e0e0; margin-bottom: 2px; font-size: 11px; color: #999; font-weight: 500; }
+    .topping-detail-thead span:first-child { flex: 1; }
+    .topping-detail-thead span:last-child { width: 110px; text-align: center; }
+    @media (min-width: 768px) { .topping-detail-thead span:last-child { width: 130px; } }
+    .topping-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 4px; border-bottom: 1px solid #f5f5f5; }
+    .topping-detail-row:last-child { border-bottom: none; }
+    .topping-detail-name { font-size: 12px; flex: 1; color: var(--text); }
+    .topping-detail-qty { display: flex; align-items: center; gap: 4px; width: 110px; justify-content: center; }
+    @media (min-width: 768px) { .topping-detail-qty { width: 130px; } }
+    .topping-detail-qty .inline-input { width: 50px; padding: 2px 4px; font-size: 12px; }
+    .topping-detail-qty span { font-size: 11px; color: #999; }
+    .topping-cost-row { padding-top: 8px; margin-top: 4px; border-top: 1px solid #e0e0e0; }
     
     /* 区块标题带筛选 */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
@@ -286,7 +293,7 @@
           </div>
           <div class="table-scroll">
             <table id="toppings-active-table">
-              <thead><tr><th>名称</th><th>原料组成</th><th>用量</th><th>成本</th><th>操作</th></tr></thead>
+              <thead><tr><th>名称</th><th>原料组成/用量</th><th>成本</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -301,7 +308,7 @@
           </div>
           <div class="table-scroll">
             <table id="bases-active-table">
-              <thead><tr><th>名称</th><th>条数</th><th>原料组成</th><th>用量</th><th>成本</th><th>操作</th></tr></thead>
+              <thead><tr><th>名称</th><th>条数</th><th>原料组成/用量</th><th>成本</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -313,7 +320,7 @@
           <div class="section-title" style="margin-bottom: 16px;">❄️ 小料 - 冻结区</div>
           <div class="table-scroll">
             <table id="toppings-frozen-table">
-              <thead><tr><th>名称</th><th>原料组成</th><th>成本</th><th>操作</th></tr></thead>
+              <thead><tr><th>名称</th><th>原料组成/用量</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -325,7 +332,7 @@
           <div class="section-title" style="margin-bottom: 16px;">❄️ 冰底 - 冻结区</div>
           <div class="table-scroll">
             <table id="bases-frozen-table">
-              <thead><tr><th>名称</th><th>条数</th><th>原料组成</th><th>成本</th><th>操作</th></tr></thead>
+              <thead><tr><th>名称</th><th>条数</th><th>原料组成/用量</th><th>操作</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -714,17 +721,15 @@
       const topTbody = document.querySelector('#toppings-active-table tbody'); const topEmpty = document.getElementById('toppings-active-empty');
       if (activeToppings.length === 0) { topTbody.innerHTML = ''; topEmpty.style.display = 'block'; }
       else { topEmpty.style.display = 'none'; topTbody.innerHTML = activeToppings.map(top => {
-        const namesHtml = top.ingredients.map(ing => `<span style="font-size:13px;">${ing.ingredientName}（${ing.brand}）</span>`).join('、');
-        const qtyHtml = top.ingredients.map(ing => `<div class="topping-ing"><span style="font-size:13px;color:#666;">${ing.ingredientName}</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
-        return `<tr><td data-label="名称" class="m-col-name" style="font-weight:600;">${top.name}</td><td data-label="原料组成" class="m-col-info">${namesHtml}</td><td data-label="用量" class="m-col-price"><div class="topping-detail">${qtyHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);font-size:13px;">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+        const detailHtml = top.ingredients.map(ing => `<div class="topping-detail-row"><span class="topping-detail-name">${ing.ingredientName}</span><div class="topping-detail-qty"><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span>${ing.unit}</span></div></div>`).join('');
+        return `<tr><td data-label="名称" class="m-col-name" style="font-weight:600;">${top.name}</td><td data-label="原料组成/用量" class="m-col-full"><div class="topping-detail-card"><div class="topping-detail-thead"><span>原料组成</span><span>用量</span></div>${detailHtml}<div class="topping-cost-row"><div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:8px;">成本：¥${calculateUnitCost(top).toFixed(2)}</div><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></div></div></td></tr>`;
       }).join(''); }
       
       const baseTbody = document.querySelector('#bases-active-table tbody'); const baseEmpty = document.getElementById('bases-active-empty');
       if (activeBases.length === 0) { baseTbody.innerHTML = ''; baseEmpty.style.display = 'block'; }
       else { baseEmpty.style.display = 'none'; baseTbody.innerHTML = activeBases.map(top => {
-        const namesHtml = top.ingredients.map(ing => `<span style="font-size:13px;">${ing.ingredientName}（${ing.brand}）</span>`).join('、');
-        const qtyHtml = top.ingredients.map(ing => `<div class="topping-ing"><span style="font-size:13px;color:#666;">${ing.ingredientName}</span><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span style="color:#999;font-size:11px;">${ing.unit}</span><span class="topping-ing-cost">¥${ing.weight > 0 ? ((ing.quantity / ing.weight) * ing.price).toFixed(2) : '0.00'}</span></div>`).join('');
-        return `<tr><td data-label="名称" class="m-col-name" style="font-weight:600;">${top.name}</td><td data-label="条数"><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td data-label="原料组成" class="m-col-info">${namesHtml}</td><td data-label="用量" class="m-col-price"><div class="topping-detail">${qtyHtml}</div></td><td data-label="成本" style="font-weight:700;color:var(--orange);font-size:13px;">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`;
+        const detailHtml = top.ingredients.map(ing => `<div class="topping-detail-row"><span class="topping-detail-name">${ing.ingredientName}</span><div class="topping-detail-qty"><input type="number" class="inline-input" value="${ing.quantity}" step="0.01" onchange="updateIngredientQuantity('${top.id}', '${ing.ingredientId}', this.value)"><span>${ing.unit}</span></div></div>`).join('');
+        return `<tr><td data-label="名称" class="m-col-name" style="font-weight:600;">${top.name}</td><td data-label="条数"><input type="number" class="inline-input" value="${top.portions || 1}" min="1" onchange="updateToppingPortions('${top.id}', this.value)" style="width:50px;"></td><td data-label="原料组成/用量" class="m-col-full"><div class="topping-detail-card"><div class="topping-detail-thead"><span>原料组成</span><span>用量</span></div>${detailHtml}<div class="topping-cost-row"><div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:8px;">成本：¥${calculateUnitCost(top).toFixed(2)}</div><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="toggleToppingFrozen('${top.id}')">冻结</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></div></div></td></tr>`;
       }).join(''); }
       
       const frozenToppings = data.toppings.filter(t => t.frozen && t.type === '小料');
@@ -732,11 +737,17 @@
       
       const frozenTbody = document.querySelector('#toppings-frozen-table tbody'); const frozenEmpty = document.getElementById('toppings-frozen-empty');
       if (frozenToppings.length === 0) { frozenTbody.innerHTML = ''; frozenEmpty.style.display = 'block'; }
-      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozenToppings.map(top => `<tr class="frozen"><td data-label="名称" class="m-col-name">${top.name}</td><td data-label="原料组成">${top.ingredients.map(i => `${i.ingredientName}（${i.brand}）`).join('、')}</td><td data-label="成本">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`).join(''); }
+      else { frozenEmpty.style.display = 'none'; frozenTbody.innerHTML = frozenToppings.map(top => {
+        const detailHtml = top.ingredients.map(ing => `<div class="topping-detail-row"><span class="topping-detail-name">${ing.ingredientName}</span><div class="topping-detail-qty"><span style="font-size:12px;color:#666;">${ing.quantity || 0}</span><span>${ing.unit}</span></div></div>`).join('');
+        return `<tr class="frozen"><td data-label="名称" class="m-col-name">${top.name}</td><td data-label="原料组成/用量" class="m-col-full"><div class="topping-detail-card"><div class="topping-detail-thead"><span>原料组成</span><span>用量</span></div>${detailHtml}<div class="topping-cost-row"><div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:8px;">成本：¥${calculateUnitCost(top).toFixed(2)}</div><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></div></div></td></tr>`;
+      }).join(''); }
       
       const baseFrozenTbody = document.querySelector('#bases-frozen-table tbody'); const baseFrozenEmpty = document.getElementById('bases-frozen-empty');
       if (frozenBases.length === 0) { baseFrozenTbody.innerHTML = ''; baseFrozenEmpty.style.display = 'block'; }
-      else { baseFrozenEmpty.style.display = 'none'; baseFrozenTbody.innerHTML = frozenBases.map(top => `<tr class="frozen"><td data-label="名称" class="m-col-name">${top.name}</td><td data-label="条数">${top.portions || 1}</td><td data-label="原料组成">${top.ingredients.map(i => `${i.ingredientName}（${i.brand}）`).join('、')}</td><td data-label="成本">¥${calculateUnitCost(top).toFixed(2)}</td><td data-label="操作" class="m-col-ops"><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></td></tr>`).join(''); }
+      else { baseFrozenEmpty.style.display = 'none'; baseFrozenTbody.innerHTML = frozenBases.map(top => {
+        const detailHtml = top.ingredients.map(ing => `<div class="topping-detail-row"><span class="topping-detail-name">${ing.ingredientName}</span><div class="topping-detail-qty"><span style="font-size:12px;color:#666;">${ing.quantity || 0}</span><span>${ing.unit}</span></div></div>`).join('');
+        return `<tr class="frozen"><td data-label="名称" class="m-col-name">${top.name}</td><td data-label="条数">${top.portions || 1}</td><td data-label="原料组成/用量" class="m-col-full"><div class="topping-detail-card"><div class="topping-detail-thead"><span>原料组成</span><span>用量</span></div>${detailHtml}<div class="topping-cost-row"><div style="font-weight:700;color:var(--orange);font-size:13px;margin-bottom:8px;">成本：¥${calculateUnitCost(top).toFixed(2)}</div><div class="btn-group"><button class="btn btn-success btn-sm" onclick="toggleToppingFrozen('${top.id}')">启用</button><button class="btn btn-default btn-sm" onclick="editTopping('${top.id}')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteTopping('${top.id}')">删除</button></div></div></div></td></tr>`;
+      }).join(''); }
     }
     
     // 记录
