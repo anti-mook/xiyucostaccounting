@@ -637,9 +637,9 @@
       const activeIngs = data.ingredients.filter(i => !i.frozen);
       const categories = [...new Set(activeIngs.map(i => i.category))];
       let optionsHtml = '';
-      categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; activeIngs.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.name}（${i.brand}）</option>`; }); optionsHtml += `</optgroup>`; });
-      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;';
-      row.innerHTML = `<div class="form-group" style="flex: 3;"><select class="top-ing-select">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>`;
+      categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; activeIngs.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.brand} · ${i.name}（${i.weight}${i.unit}）</option>`; }); optionsHtml += `</optgroup>`; });
+      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee; background: #fafbfc; border-radius: 8px; margin-bottom: 6px;';
+      row.innerHTML = `<div class="form-group" style="flex: 1; margin: 0; min-width: 0;"><select class="top-ing-select" style="width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;background:#fff;">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-left:8px;flex-shrink:0;">✕</button>`;
       container.appendChild(row);
     }
     
@@ -672,9 +672,9 @@
     function addEditToppingIngredientRow() {
       if (data.ingredients.length === 0) { alert('请先添加原料'); return; }
       const container = document.getElementById('edit-topping-ingredients-list'); const categories = [...new Set(data.ingredients.map(i => i.category))];
-      let optionsHtml = ''; categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; data.ingredients.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.name}（${i.brand}）</option>`; }); optionsHtml += `</optgroup>`; });
-      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 6px 0;';
-      row.innerHTML = `<div class="form-group" style="flex: 3;"><select class="edit-top-ing-select">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">删除</button>`; container.appendChild(row);
+      let optionsHtml = ''; categories.forEach(cat => { optionsHtml += `<optgroup label="${cat}">`; data.ingredients.filter(i => i.category === cat).forEach(i => { optionsHtml += `<option value="${i.id}">${i.brand} · ${i.name}（${i.weight}${i.unit}）</option>`; }); optionsHtml += `</optgroup>`; });
+      const row = document.createElement('div'); row.className = 'form-row'; row.style.cssText = 'align-items: center; padding: 10px 12px; background: #fafbfc; border-radius: 8px; margin-bottom: 6px;';
+      row.innerHTML = `<div class="form-group" style="flex: 1; margin: 0; min-width: 0;"><select class="edit-top-ing-select" style="width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;background:#fff;">${optionsHtml}</select></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-left:8px;flex-shrink:0;">✕</button>`; container.appendChild(row);
     }
     
     function confirmEditTopping() {
